@@ -1,0 +1,149 @@
+src/
+├─ app/
+│   ├─ login/
+│   │   └─ page.jsx
+│   │
+│   ├─ dashboard/
+│   │   ├─ layout.jsx                    # Common dashboard UI wrapper
+│   │   │
+│   │   ├─ recruiter/
+│   │   │   └─ page.jsx
+│   │   │
+│   │   ├─ superadmin/
+│   │   │   └─ page.jsx
+│   │   │
+│   │   ├─ finance-manager/
+│   │   │   └─ page.jsx
+│   │   │
+│   │   ├─ operations/
+│   │   │   └─ page.jsx
+│   │   │
+│   │   ├─ support/
+│   │   │   └─ page.jsx
+│   │   │
+│   │   └─ seeker/
+│   │       └─ page.jsx
+│   │
+│   └─ page.jsx                          # Landing page
+│
+├─ components/
+│   ├─ layout/
+│   │   ├─ DashboardLayout.jsx
+│   │   ├─ Sidebar.jsx
+│   │   └─ Topbar.jsx
+│   │
+│   ├─ ui/                               # Reusable UI
+│   │   ├─ Button.jsx
+│   │   ├─ Input.jsx
+│   │   └─ Card.jsx
+│   │
+│   ├─ role-widgets/                     # Role-specific components
+│   │   ├─ recruiter/
+│   │   │   └─ RecruiterStatsCard.jsx
+│   │   ├─ superadmin/
+│   │   │   └─ UserManagementCard.jsx
+│   │   ├─ finance-manager/
+│   │   │   └─ InvoiceCard.jsx
+│   │   ├─ operations/
+│   │   │   └─ OperationTaskCard.jsx
+│   │   ├─ support/
+│   │   │   └─ SupportTicketCard.jsx
+│   │   └─ seeker/
+│   │       └─ SeekerJobCard.jsx
+│   │
+│   └─ shared/
+│       └─ EmptyState.jsx
+│
+├─ store/                                # Redux Toolkit Store
+│   ├─ index.js
+│   ├─ slices/
+│   │   ├─ authSlice.js
+│   │   ├─ recruiterSlice.js
+│   │   ├─ superAdminSlice.js
+│   │   ├─ financeSlice.js
+│   │   ├─ operationsSlice.js
+│   │   └─ supportSlice.js
+│   │
+│   └─ selectors/
+│       └─ authSelectors.js
+│
+├─ hooks/
+│   ├─ useAuth.js                         # check role, session
+│   ├─ useApi.js                          # wrap fetch/axios
+│   └─ useDebounce.js
+│
+├─ services/                              # API Clients
+│   ├─ http.js                            # axios base instance
+│   ├─ authService.js
+│   ├─ recruiterService.js
+│   ├─ superAdminService.js
+│   ├─ financeService.js
+│   ├─ operationsService.js
+│   └─ supportService.js
+│
+├─ middleware.js                           # Role-based route guard
+│
+├─ context/
+│   └─ AuthProvider.jsx                    # If needed with redux or alone
+│
+├─ utils/
+│   ├─ constants.js
+│   ├─ roles.js
+│   └─ helpers.js
+│
+└─ styles/
+    └─ globals.css
+
+--------------------------------------------------------------------------------------------
+
+
+
+SBSBACKEND
+│
+├─ src
+│  ├─ config
+│  │   ├─ db.config.ts            // DB connect config (TypeORM/DataSource)
+│  │   └─ env.config.ts           // Environment variables loader (dotenv)
+│  │
+│  ├─ constants
+│  │   └─ index.ts                // Reusable constants, roles, status codes, messages
+│  │
+│  ├─ entities                    // TypeORM Entities (Database Models)
+│  │   └─ User.ts
+│  │
+│  ├─ interfaces                  // DTO & Interface typing
+│  │   └─ user.interface.ts
+│  │
+│  ├─ middleware
+│  │   ├─ auth.middleware.ts      // JWT Auth Middleware
+│  │   ├─ validate.middleware.ts  // Joi/Zod validator middleware
+│  │   └─ error.middleware.ts     // Global Error Handler
+│  │
+│  ├─ services                    // Business logic layer
+│  │   └─ user.service.ts
+│  │
+│  ├─ controllers                 // Controller / Request Handlers
+│  │   └─ user.controller.ts
+│  │
+│  ├─ routes
+│  │   └─ user.routes.ts
+│  │
+│  ├─ utils
+│  │   ├─ logger.ts               // Winston / Pino logger config
+│  │   └─ response.ts             // Unified API Response handler
+│  │
+│  ├─ uploads                     // Multer file uploads folder (if needed)
+│  │
+│  ├─ docs                        // Swagger / API documentation folder
+│  │   └─ swagger.json
+│  │
+│  ├─ app.ts                      // Express app setup
+│  └─ server.ts                   // Start server file
+│
+├─ .env
+├─ .env.example                   // Public safe .env template
+├─ .gitignore
+├─ package.json
+├─ tsconfig.json
+├─ ecosystem.config.js            // PM2 config for deployment (optional)
+└─ README.md
