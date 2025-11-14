@@ -1,98 +1,93 @@
 src/
 ├─ app/
 │   ├─ login/
-│   │   └─ page.jsx
-│   │
-│   ├─ dashboard/
-│   │   ├─ layout.jsx                    # Common dashboard UI wrapper
-│   │   │
+│   │   └─ page.tsx
+│   │ 
+│   │                         
+│   │   
 │   │   ├─ recruiter/
-│   │   │   └─ page.jsx
-│   │   │
+│   │   │   └─ page.tsx
+│   │   │ 
 │   │   ├─ superadmin/
-│   │   │   └─ page.jsx
+│   │   │   └─ page.tsx
 │   │   │
 │   │   ├─ finance-manager/
-│   │   │   └─ page.jsx
+│   │   │   └─ page.tsx
 │   │   │
 │   │   ├─ operations/
-│   │   │   └─ page.jsx
+│   │   │   └─ page.tsx
 │   │   │
 │   │   ├─ support/
-│   │   │   └─ page.jsx
+│   │   │   └─ page.tsx
 │   │   │
 │   │   └─ seeker/
-│   │       └─ page.jsx
+│   │       └─ page.tsx
 │   │
-│   └─ page.jsx                          # Landing page
+│   └─ page.tsx                            # Landing page
 │
 ├─ components/
 │   ├─ layout/
-│   │   ├─ DashboardLayout.jsx
-│   │   ├─ Sidebar.jsx
-│   │   └─ Topbar.jsx
+│   │   ├─ DashboardLayout.tsx
+│   │   ├─ Sidebar.tsx
+│   │   └─ Topbar.tsx
 │   │
-│   ├─ ui/                               # Reusable UI
-│   │   ├─ Button.jsx
-│   │   ├─ Input.jsx
-│   │   └─ Card.jsx
+│   ├─ ui/                                 # Reusable UI
+│   │   ├─ Button.tsx
+│   │   ├─ Input.tsx
+│   │   └─ Card.tsx
 │   │
-│   ├─ role-widgets/                     # Role-specific components
+│   ├─ role-widgets/                       # Role-specific components
 │   │   ├─ recruiter/
-│   │   │   └─ RecruiterStatsCard.jsx
+│   │   │   └─ RecruiterStatsCard.tsx
 │   │   ├─ superadmin/
-│   │   │   └─ UserManagementCard.jsx
+│   │   │   └─ UserManagementCard.tsx
 │   │   ├─ finance-manager/
-│   │   │   └─ InvoiceCard.jsx
+│   │   │   └─ InvoiceCard.tsx
 │   │   ├─ operations/
-│   │   │   └─ OperationTaskCard.jsx
+│   │   │   └─ OperationTaskCard.tsx
 │   │   ├─ support/
-│   │   │   └─ SupportTicketCard.jsx
+│   │   │   └─ SupportTicketCard.tsx
 │   │   └─ seeker/
-│   │       └─ SeekerJobCard.jsx
+│   │       └─ SeekerJobCard.tsx
 │   │
 │   └─ shared/
-│       └─ EmptyState.jsx
+│       └─ EmptyState.tsx
 │
-├─ store/                                # Redux Toolkit Store
-│   ├─ index.js
+├─ store/                                  # Redux Toolkit Store
+│   ├─ index.ts
 │   ├─ slices/
-│   │   ├─ authSlice.js
-│   │   ├─ recruiterSlice.js
-│   │   ├─ superAdminSlice.js
-│   │   ├─ financeSlice.js
-│   │   ├─ operationsSlice.js
-│   │   └─ supportSlice.js
+│   │   ├─ authSlice.ts
+│   │   ├─ recruiterSlice.ts
+│   │   ├─ superAdminSlice.ts
+│   │   ├─ financeSlice.ts
+│   │   ├─ operationsSlice.ts
+│   │   └─ supportSlice.ts
 │   │
 │   └─ selectors/
-│       └─ authSelectors.js
+│       └─ authSelectors.ts
 │
 ├─ hooks/
-│   ├─ useAuth.js                         # check role, session
-│   ├─ useApi.js                          # wrap fetch/axios
-│   └─ useDebounce.js
+│   ├─ useAuth.ts                           # check role, session
+│   ├─ useApi.ts                            # wrap fetch/axios
+│   └─ useDebounce.ts
 │
-├─ services/                              # API Clients
-│   ├─ http.js                            # axios base instance
-│   ├─ authService.js
-│   ├─ recruiterService.js
-│   ├─ superAdminService.js
-│   ├─ financeService.js
-│   ├─ operationsService.js
-│   └─ supportService.js
-│
-├─ middleware.js                           # Role-based route guard
+├─ services/                                # API Clients
+│   ├─ http.ts                              # axios base instance
+│   ├─ authService.ts
+│   ├─  
+├─ middleware.ts                             # Role-based route guard
 │
 ├─ context/
-│   └─ AuthProvider.jsx                    # If needed with redux or alone
+│   └─ AuthProvider.tsx                      # If needed with redux or alone
 │
 ├─ utils/
-│   ├─ constants.js
-│   ├─ roles.js
-│   └─ helpers.js
+│   ├─ constants.ts
+│   ├─ roles.ts
+│   └─ helpers.ts
 │
 └─ styles/
     └─ globals.css
+
 
 --------------------------------------------------------------------------------------------
 
