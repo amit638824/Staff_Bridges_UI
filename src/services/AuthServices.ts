@@ -1,0 +1,20 @@
+import axiosInstance from "@/services/index";
+ 
+
+export const loginService = async (data: any) => {
+  const res = await axiosInstance.post("/auth/email-login", data);
+  return res.data; // <- yahi tum frontend me use karoge
+};
+
+
+// 🔹 Forgot Password Service
+export const forgotPasswordService = async (email: string) => {
+  const res = await axiosInstance.post("/auth/forget-password", { email });
+  return res.data;
+};
+
+// 🔹 Reset Password
+export const resetPasswordService = async (data: any) => {
+  const res = await axiosInstance.post("/auth/reset-password", data);
+  return res.data;
+};
