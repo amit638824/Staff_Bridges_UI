@@ -6,7 +6,7 @@ import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup"; 
 import { loginService } from "@/services/AuthServices";
 import { showAlert } from "@/utils/swalFire";
-import GoogleButton from "@/pages/common/Login/GoogleSignInButton";
+import GoogleButton from "@/pages/common/login/GoogleSignInButton";
 // Yup Schema
 const schema = Yup.object().shape({
     email: Yup.string()
