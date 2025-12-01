@@ -1,9 +1,10 @@
-import React from 'react'
 import Layout from '@/pages/common/layout/Layout'
+import React from 'react'
+
 const page = () => {
   return (
     <Layout>
-      Job post
+      <h1>Joblist</h1>
     </Layout>
   )
 }
