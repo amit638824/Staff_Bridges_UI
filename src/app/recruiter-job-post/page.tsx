@@ -3,7 +3,7 @@ import Layout from '@/pages/common/layout/Layout'
 const page = () => {
   return (
     <Layout>
-      Job post
+      <h1>Job post</h1>
     </Layout>
   )
 }
