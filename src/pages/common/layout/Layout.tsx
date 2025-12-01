@@ -10,11 +10,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className="d-flex vh-100">
       {/* Sidebar */}
       <div
-        style={{
-          width: open ? 250 : 0,
-          transition: "width 0.3s",
-          overflow: "hidden",
-        }}
+        style={{  width: open ? 250 : 0,   transition: "width 0.3s",  overflow: "hidden", }}
       >
         <SideBar isOpen={open} />
       </div>
