@@ -7,8 +7,10 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { loginService } from "@/services/AuthServices";
 import { showAlert } from "@/utils/swalFire";
 import GoogleButton from "@/pages/common/login/GoogleSignInButton";
-import { log } from "console";
-// Yup Schema
+import { useDispatch } from "react-redux";
+import { login } from "@/redux/slice/authSlice";
+import { useSession } from "@/hooks/useSession";
+ 
 const schema = Yup.object().shape({
     email: Yup.string()
         .email("Invalid email format")
@@ -27,17 +29,19 @@ const SignIn = () => {
     } = useForm({
         resolver: yupResolver(schema),
     });
+       const { user, token, isLoggedIn } = useSession(); 
 
-    // Submit Handler
+    const dispatch = useDispatch();
     const onSubmit = async (formData: any) => {
         try {
             const response = await loginService(formData);
             showAlert(response.success ? "success" : "error", response?.message, response?.success ? "Success" : "Failed");
             if (!response?.success) return;
-            // Save token
-            localStorage.setItem("token", response?.data?.token);
-            const role = response?.data?.user?.roletbl_roleName; 
 
+
+            localStorage.setItem("token", response?.data?.token);
+            const role = response?.data?.user?.roletbl_roleName;
+            dispatch(login({ user: response?.data?.user, token: response?.data?.token }));
             switch (role) {
                 case "SUPER_ADMIN":
                     window.location.href = "/super-admin/dashboard";
@@ -52,7 +56,7 @@ const SignIn = () => {
                     break;
 
                 case "RECRUITER":
-                    window.location.href = "/recruiter";
+                    //  window.location.href = "/recruiter";
                     break;
 
                 default:
@@ -66,7 +70,7 @@ const SignIn = () => {
     return (
         <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
             <div className="card p-4 shadow-lg" style={{ width: "400px", borderRadius: "20px" }}>
-                <h3 className="text-center mb-4">Welcome Back 👋</h3>
+                <h3 className="text-center mb-4">Welcome Back {isLoggedIn ? "ok":"false"}</h3>
 
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="mb-3">

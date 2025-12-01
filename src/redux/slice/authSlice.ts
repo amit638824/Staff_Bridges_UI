@@ -1,14 +1,7 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'; 
 
-interface UserState {
-  name: string;
-  email: string;
-  token: string | null;
-}
-
-const initialState: UserState = {
-  name: '',
-  email: '',
+const initialState: any = {
+  user: {},
   token: null,
 };
 
@@ -16,18 +9,21 @@ const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    setUser(state, action: PayloadAction<{ name: string; email: string; token: string }>) {
-      state.name = action.payload.name;
-      state.email = action.payload.email;
+    login(state, action: any) {
+      state.user = action.payload.user;
       state.token = action.payload.token;
     },
-    clearUser(state) {
-      state.name = '';
-      state.email = '';
+    logout(state) {
+      state.user={}
       state.token = null;
     },
   },
 });
 
-export const { setUser, clearUser } = userSlice.actions;
+export const { login,logout } :any= userSlice.actions;
 export default userSlice.reducer;
+
+
+export const useSession=()=>{
+    return
+}

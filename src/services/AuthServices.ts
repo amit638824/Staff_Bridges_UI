@@ -18,3 +18,8 @@ export const resetPasswordService = async (data: any) => {
   const res = await axiosInstance.post("/auth/reset-password", data);
   return res.data;
 };
+
+ export const socialLoginService = async (idToken: string) => {
+  const res = await axiosInstance.post("/auth/social-login", { idToken });
+  return res.data;
+};
