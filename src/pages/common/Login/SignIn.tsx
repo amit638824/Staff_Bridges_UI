@@ -3,10 +3,11 @@ import React from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import * as Yup from "yup";
-import { yupResolver } from "@hookform/resolvers/yup"; 
+import { yupResolver } from "@hookform/resolvers/yup";
 import { loginService } from "@/services/AuthServices";
 import { showAlert } from "@/utils/swalFire";
 import GoogleButton from "@/pages/common/login/GoogleSignInButton";
+import { log } from "console";
 // Yup Schema
 const schema = Yup.object().shape({
     email: Yup.string()
@@ -31,27 +32,32 @@ const SignIn = () => {
     const onSubmit = async (formData: any) => {
         try {
             const response = await loginService(formData);
-            showAlert(response.success ? "success" : "error", response.message, response.success ? "Success" : "Failed");
-            if (!response.success) return;
+            showAlert(response.success ? "success" : "error", response?.message, response?.success ? "Success" : "Failed");
+            if (!response?.success) return;
             // Save token
-            localStorage.setItem("token", response.data.token);
-            const role = response.data.user.roletbl_roleName;
-            // switch (role) {
-            //   case "SUPER_ADMIN":
-            //     window.location.href = "/super-admin/dashboard";
-            //     break;
+            localStorage.setItem("token", response?.data?.token);
+            const role = response?.data?.user?.roletbl_roleName; 
 
-            //   case "OPERATIONS_ADMIN":
-            //     window.location.href = "/operations/dashboard";
-            //     break;
+            switch (role) {
+                case "SUPER_ADMIN":
+                    window.location.href = "/super-admin/dashboard";
+                    break;
 
-            //   case "FINANCE_ADMIN":
-            //     window.location.href = "/finance/dashboard";
-            //     break;
+                case "OPERATIONS_ADMIN":
+                    window.location.href = "/operations/dashboard";
+                    break;
 
-            //   default:
-            //     window.location.href = "/";
-            // }
+                case "FINANCE_ADMIN":
+                    window.location.href = "/finance/dashboard";
+                    break;
+
+                case "RECRUITER":
+                    window.location.href = "/recruiter";
+                    break;
+
+                default:
+                    window.location.href = "/";
+            }
         } catch (error: any) {
             showAlert("error", error?.response?.data?.message || "Something went wrong!", "Login Failed");
         }
@@ -101,7 +107,7 @@ const SignIn = () => {
                     <p>
                         Don’t have an account?{" "}
                         <Link href="/signup" className="text-primary">Sign up</Link>
-                    </p> 
+                    </p>
                     <GoogleButton />
                 </div>
             </div>
