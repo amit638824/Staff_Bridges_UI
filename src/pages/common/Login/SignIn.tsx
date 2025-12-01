@@ -3,11 +3,10 @@ import React from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import * as Yup from "yup";
-import { yupResolver } from "@hookform/resolvers/yup";
-import Swal from "sweetalert2";
+import { yupResolver } from "@hookform/resolvers/yup"; 
 import { loginService } from "@/services/AuthServices";
 import { showAlert } from "@/utils/swalFire";
-import GoogleButton from "./GoogleSignInButton";
+import GoogleButton from "@/pages/common/Login/GoogleSignInButton";
 // Yup Schema
 const schema = Yup.object().shape({
     email: Yup.string()

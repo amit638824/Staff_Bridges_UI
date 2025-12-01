@@ -1,5 +1,5 @@
 import React from 'react'
-import ForgetPassword from '@/pages/common/ForgetPassword'
+import ForgetPassword from '@/pages/common/Login/ForgetPassword'
 const page = () => {
   return (
     <>
