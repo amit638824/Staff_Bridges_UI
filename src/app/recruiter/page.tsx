@@ -1,5 +1,5 @@
 import React from "react";
-import Layout from "@/pages/common/layout/Layout";
+import Layout from "@/ui/common/layout/Layout";
 
 const Page = () => {
   return (

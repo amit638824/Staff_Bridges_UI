@@ -9,19 +9,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="d-flex vh-100">
       {/* Sidebar */}
-      <div
-        style={{  width: open ? 250 : 0,   transition: "width 0.3s",  overflow: "hidden", }}
-      >
-        <SideBar isOpen={open} />
-      </div>
-
-      {/* Main Content */}
+      <SideBar isOpen={open} toggle={() => setOpen(!open)} /> 
+      {/* Main */}
       <div className="flex-grow-1 d-flex flex-column">
-        <TopBar
-          toggleSideBar={() => { 
-            setOpen(!open);
-          }}
-        />
+        <TopBar   />
         <div className="p-4 flex-grow-1 overflow-auto">{children}</div>
       </div>
     </div>

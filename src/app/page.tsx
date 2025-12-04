@@ -1,9 +1,11 @@
 "use client";
-import SignIn from "@/pages/common/login/SignIn";
-export default function Home() {
-  return (
-    <>
-    <SignIn/>
-    </>
-  );
+
+import dynamic from "next/dynamic";
+
+const SignInPage = dynamic(() => import("@/ui/common/login/SignIn"), {
+  ssr: false,
+});
+
+export default function LoginPage() {
+  return <SignInPage />;
 }
