@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8000/",   // 🔥 এখানে अपना API base URL डालो
+  baseURL: "https://staffbridgesapi.techwagger.com/",   //  
   headers: {
     "Content-Type": "application/json",
   },

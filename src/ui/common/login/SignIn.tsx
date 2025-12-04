@@ -1,12 +1,13 @@
 "use client";
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { loginService } from "@/services/AuthServices";
 import { showAlert } from "@/utils/swalFire";
-import GoogleButton from "@/pages/common/login/GoogleSignInButton";
+import GoogleButton from "@/ui/common/login/GoogleSignInButton";
 import { useDispatch } from "react-redux";
 import { login } from "@/redux/slice/authSlice";
 import { useSession } from "@/hooks/useSession";
@@ -56,7 +57,7 @@ const SignIn = () => {
                     break;
 
                 case "RECRUITER":
-                    //  window.location.href = "/recruiter";
+                     window.location.href = "/recruiter";
                     break;
 
                 default:
@@ -68,10 +69,12 @@ const SignIn = () => {
     };
 
     return (
-        <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
-            <div className="card p-4 shadow-lg" style={{ width: "400px", borderRadius: "20px" }}>
-                <h3 className="text-center mb-4">Welcome Back {isLoggedIn ? "ok":"false"}</h3>
-
+        <div className="d-flex justify-content-center align-items-center vh-100 bg-themebg">
+            <div className="card p-4 shadow-lg loginBox">
+            <div className="logoheader">
+                <Image src="/assets/images/logo.png" width={150} height={74} alt="Logo" />
+            </div>
+                <h3 className="text-center mb-4">Welcome to Staff Bridges!</h3>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="mb-3">
                         <label className="form-label">Email Address</label>
@@ -96,11 +99,11 @@ const SignIn = () => {
 
 
                     <div className="d-flex justify-content-between align-items-center mb-3">
-                        <div>
+                        <div className="remeberme">
                             <input type="checkbox" id="remember" />
                             <label className="ms-2" htmlFor="remember">Remember me</label>
                         </div>
-                        <Link href="/forget-password">Forgot Password?</Link>
+                        <Link href="/forget-password" className="themeBlue">Forgot Password?</Link>
                     </div>
 
 
@@ -110,7 +113,7 @@ const SignIn = () => {
                 <div className="text-center mt-3">
                     <p>
                         Don’t have an account?{" "}
-                        <Link href="/signup" className="text-primary">Sign up</Link>
+                        <Link href="/signup" className="themeBlue">Sign up</Link>
                     </p>
                     <GoogleButton />
                 </div>

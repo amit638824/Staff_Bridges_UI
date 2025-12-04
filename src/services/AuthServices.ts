@@ -3,7 +3,7 @@ import axiosInstance from "@/services/index";
 
 export const loginService = async (data: any) => {
   const res = await axiosInstance.post("/auth/email-login", data);
-  return res.data; // <- yahi tum frontend me use karoge
+  return res.data;  
 };
 
 
@@ -23,3 +23,5 @@ export const resetPasswordService = async (data: any) => {
   const res = await axiosInstance.post("/auth/social-login", { idToken });
   return res.data;
 };
+
+

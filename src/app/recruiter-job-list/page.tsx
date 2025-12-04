@@ -1,4 +1,4 @@
-import Layout from '@/pages/common/layout/Layout'
+import Layout from '@/ui/common/layout/Layout'
 import React from 'react'
 
 const page = () => {
