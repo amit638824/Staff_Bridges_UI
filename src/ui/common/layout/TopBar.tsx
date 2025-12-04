@@ -1,17 +1,84 @@
-import React from "react";
+"use client";
+import React, { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { RxHamburgerMenu } from "react-icons/rx";
+import { FaUser, FaSignOutAlt } from "react-icons/fa";
 
-export default function TopBar({ toggleSideBar }: { toggleSideBar: () => void }) {
+export default function TopBar() {
+  const [openDropdown, setOpenDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpenDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  //   Logout function
+  const handleLogout = () => {
+    // (Optional) LocalStorage clear
+    localStorage.clear();
+
+    // Redirect to home/login page
+    router.push("/");
+  };
+
   return (
-    <nav className="navbar navbar-light bg-white shadow-sm px-3 py-2 d-flex justify-content-between">
-      <div className="d-flex align-items-center gap-3">
-        <RxHamburgerMenu
-          style={{ cursor: "pointer", fontSize: "1.5rem" }}
-          onClick={toggleSideBar}
+    <div
+      className="d-flex align-items-center justify-content-between px-3 border-bottom bg-white"
+      style={{
+        height: "50px",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+        position: "relative",
+        zIndex: 20,
+      }}
+    >
+      <div className="position-relative ms-auto" ref={dropdownRef}>
+
+        <img
+          src="https://i.pravatar.cc/40?img=12"
+          alt="profile"
+          width={38}
+          height={38}
+          onClick={() => setOpenDropdown(!openDropdown)}
+          style={{
+            borderRadius: "50%",
+            cursor: "pointer",
+            objectFit: "cover",
+          }}
         />
-        <h5 className="m-0">Welcome back, Vivek!</h5>
+
+        {/* Dropdown */}
+        {openDropdown && (
+          <div
+            className="bg-white shadow position-absolute end-0 mt-2 p-3 rounded"
+            style={{ width: "260px", top: "45px" }}
+          >
+            <h6 className="fw-bold m-0">Amit Singh</h6>
+            <p className="text-muted small mb-3">amit.chauhan@techwagger.com</p>
+
+            <div className="d-flex align-items-center gap-2 mb-3" style={{ cursor: "pointer" }}>
+              <FaUser size={16} />
+              <span>Profile</span>
+            </div>
+
+            <div
+              className="d-flex align-items-center gap-2"
+              style={{ cursor: "pointer" }}
+              onClick={handleLogout}
+            >
+              <FaSignOutAlt size={16} />
+              <span>Log Out</span>
+            </div>
+          </div>
+        )}
       </div>
-      <button className="btn btn-primary btn-sm">Post a Job</button>
-    </nav>
+
+    </div>
   );
 }
