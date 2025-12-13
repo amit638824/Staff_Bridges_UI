@@ -8,7 +8,10 @@ export const loginService = async (data: any) => {
 
 
 // 🔹 Forgot Password Service
-export const forgotPasswordService = async (email: string) => {
+export const forgotPasswordService = async (email: string ) => {
+ let url=`/auth/forget-password?`;
+ 
+
   const res = await axiosInstance.post("/auth/forget-password", { email });
   return res.data;
 };
