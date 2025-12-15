@@ -16,6 +16,7 @@ import { FaRegEyeSlash } from "react-icons/fa";
 import Loader from "@/ui/common/loader/Loader";
 import { useRouter } from "next/navigation";
 import PasswordChecklist from "react-password-checklist";
+import { useSession } from "@/hooks/useSession";
 const schema = Yup.object().shape({
     email: Yup.string()
         .email("Invalid email format")
@@ -31,7 +32,7 @@ const SignIn = () => {
     const [isPasswordValid, setIsPasswordValid] = useState(false);
     const dispatch = useDispatch();
     const router = useRouter();
-
+    const session = useSession();
     const {
         register,
         handleSubmit,
@@ -45,12 +46,38 @@ const SignIn = () => {
         control,
         name: "password",
     });
- 
+
     useEffect(() => {
         if (!password) {
             setIsPasswordValid(false);
         }
     }, [password]);
+
+    useEffect(() => {
+        if (!session) return; 
+        const role = session.user?.roletbl_roleName; 
+        switch (role) {
+            case "SUPER_ADMIN":
+                router.replace("/super-admin");
+                break;
+            case "OPERATIONS_ADMIN":
+                router.replace("/operations-admin");
+                break;
+            case "FINANCE_ADMIN":
+                router.replace("/finance-admin");
+                break;
+            case "SUPPORT_ADMIN":
+                router.replace("/support-admin");
+                break;
+            case "RECRUITER":
+                router.replace("/recruiter");
+                break;
+            default:
+                router.replace("/");
+        }
+    }, [  ]);
+
+
     useEffect(() => {
         const rememberData = localStorage.getItem("rememberMe");
         if (rememberData) {
