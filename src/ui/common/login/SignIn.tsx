@@ -72,16 +72,19 @@ const SignIn = () => {
             dispatch(
                 login({ user: response.data.user, token: response.data.token, })
             );
-            const role = response.data.user?.roletbl_roleName; 
+            const role = response.data.user?.roletbl_roleName;
             switch (role) {
                 case "SUPER_ADMIN":
-                    router.push("/super-admin/dashboard");
+                    router.push("/super-admin");
                     break;
                 case "OPERATIONS_ADMIN":
-                    router.push("/operations/dashboard");
+                    router.push("/operations-admin");
                     break;
                 case "FINANCE_ADMIN":
-                    router.push("/finance/dashboard");
+                    router.push("/finance-admin");
+                    break;
+                case "SUPPORT_ADMIN":
+                    router.push("/support-admin");
                     break;
                 case "RECRUITER":
                     router.push("/recruiter");
@@ -116,7 +119,7 @@ const SignIn = () => {
                 </div>
 
                 <h3 className="text-center mb-4">
-                    Welcome to Staff Bridges!  
+                    Welcome to Staff Bridges!
                 </h3>
 
                 <form onSubmit={handleSubmit(onSubmit)}>
@@ -225,14 +228,14 @@ const SignIn = () => {
                         >
                             Forgot Password?
                         </Link>
-                    </div> 
+                    </div>
                     <button
                         className="btn btn-primary w-100"
                         disabled={loading}
                     >
                         Login
                     </button>
-                </form> 
+                </form>
                 <div className="text-center mt-3">
                     <p>
                         Don’t have an account?{" "}

@@ -16,6 +16,10 @@ export const forgotPasswordService = async (email: string ) => {
   return res.data;
 };
 
+export const resetlinkExpireCheckService = async (data: any) => {
+  const res = await axiosInstance.post("/auth/reset-token-check", data);
+  return res.data;
+}; 
 // 🔹 Reset Password
 export const resetPasswordService = async (data: any) => {
   const res = await axiosInstance.post("/auth/reset-password", data);

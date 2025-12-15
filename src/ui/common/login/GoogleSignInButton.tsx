@@ -27,14 +27,18 @@ export default function GoogleButton() {
 
                         // Update redux store
                         dispatch(login({ user, token }));
-
-                        // SPA navigation using router
                         switch (user.roletbl_roleName) {
-                            case "ADMIN":
-                                router.push("/admin");
+                            case "SUPER_ADMIN":
+                                router.push("/super-admin");
                                 break;
-                            case "MANAGER":
-                                router.push("/manager");
+                            case "OPERATIONS_ADMIN":
+                                router.push("/operations-admin");
+                                break;
+                            case "FINANCE_ADMIN":
+                                router.push("/finance-admin");
+                                break;
+                            case "SUPPORT_ADMIN":
+                                router.push("/support-admin");
                                 break;
                             case "RECRUITER":
                                 router.push("/recruiter");
