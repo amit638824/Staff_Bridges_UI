@@ -1,12 +1,14 @@
 "use client";
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import Image from "next/image";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { forgotPasswordService } from "@/services/AuthServices"; 
+import { forgotPasswordService } from "@/services/AuthServices";
 import Link from "next/link";
 import { showAlert } from "@/utils/swalFire";
+import Loader from "../loader/Loader";
 
 // Yup Schema
 const schema = Yup.object().shape({
@@ -88,12 +90,7 @@ const ForgetPassword = () => {
           </button>
         </form>
 
-        <p className="text-center mt-3 mb-0">
-          Remember your password?{" "}
-          <Link href="/sign-in" className="text-primary">
-            Back to Login
-          </Link>
-        </p>
+        
       </div>
     </div>
   );
