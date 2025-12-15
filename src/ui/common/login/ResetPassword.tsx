@@ -5,11 +5,15 @@ import { useForm } from "react-hook-form";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Loader from "@/ui/common/loader/Loader";
+import Image from "next/image";
+
 import {
   resetlinkExpireCheckService,
   resetPasswordService,
 } from "@/services/AuthServices";
 import { showAlert } from "@/utils/swalFire";
+import { useRouter } from "next/navigation";
+
 const schema = Yup.object().shape({
   password: Yup.string()
     .min(6, "Minimum 6 characters required")
@@ -25,6 +29,7 @@ const ResetPassword = () => {
   const [isLinkValid, setIsLinkValid] = useState<boolean>(false);
   const [linkError, setLinkError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+  const router = useRouter()
   const {
     register,
     handleSubmit,
@@ -84,6 +89,7 @@ const ResetPassword = () => {
 
       if (response.success) {
         reset();
+        router.push("/")
       }
     } catch (error: any) {
       showAlert(
@@ -95,11 +101,11 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
-      <div
-        className="card p-4 shadow-lg"
-        style={{ width: "400px", borderRadius: "20px" }}
-      >
+    <div className="d-flex justify-content-center align-items-center vh-100 bg-themebg">
+
+      <div className="card p-4 shadow-lg loginBox">
+
+
         {/* Loading */}
         {loading && <Loader />}
 
@@ -111,6 +117,14 @@ const ResetPassword = () => {
         {/* Reset Password Form */}
         {!loading && isLinkValid && (
           <>
+            <div className="logoheader mb-3 text-center">
+              <Image
+                src="/assets/images/logo.png"
+                width={150}
+                height={74}
+                alt="Logo"
+              />
+            </div>
             <h3 className="text-center mb-4">Reset Password 🔐</h3>
 
             <form onSubmit={handleSubmit(onSubmit)}>
@@ -159,3 +173,4 @@ const ResetPassword = () => {
 };
 
 export default ResetPassword;
+

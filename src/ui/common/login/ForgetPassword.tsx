@@ -1,11 +1,14 @@
 "use client";
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { forgotPasswordService } from "@/services/AuthServices"; 
+import { forgotPasswordService } from "@/services/AuthServices";
 import Link from "next/link";
 import { showAlert } from "@/utils/swalFire";
+import Image from "next/image";
+import Loader from "../loader/Loader";
 
 // Yup Schema
 const schema = Yup.object().shape({
@@ -48,12 +51,22 @@ const ForgetPassword = () => {
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
-      <div
-        className="card p-4 shadow-lg"
-        style={{ width: "400px", borderRadius: "20px" }}
-      >
-        <h3 className="text-center mb-4">Forgot Password 🔐</h3>
+    <div className="d-flex justify-content-center align-items-center vh-100 bg-themebg">
+      {isSubmitting && <Loader />}
+
+      <div className="card p-4 shadow-lg loginBox">
+        <div className="logoheader mb-3 text-center">
+          <Image
+            src="/assets/images/logo.png"
+            width={150}
+            height={74}
+            alt="Logo"
+          />
+        </div>
+
+        <h3 className="text-center mb-4">
+          Forgot Password
+        </h3>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* Email */}
@@ -82,9 +95,8 @@ const ForgetPassword = () => {
           </button>
         </form>
 
-        <p className="text-center mt-3 mb-0">
-          Remember your password?{" "}
-          <Link href="/sign-in" className="text-primary">
+        <p className="text-center mt-3 mb-0"> 
+          <Link href="/" className="text-primary">
             Back to Login
           </Link>
         </p>
