@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { useForm } from "react-hook-form";
+import Image from "next/image";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { forgotPasswordService } from "@/services/AuthServices"; 
@@ -48,21 +49,26 @@ const ForgetPassword = () => {
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
-      <div
-        className="card p-4 shadow-lg"
-        style={{ width: "400px", borderRadius: "20px" }}
-      >
-        <h3 className="text-center mb-4">Forgot Password 🔐</h3>
+    <div className="d-flex justify-content-center align-items-center vh-100 bg-themebg">
+      <div className="card p-4 shadow-lg loginBox">
+        <div className="logoheader mb-3 text-center">
+                            <Image
+                                src="/assets/images/logo.png"
+                                width={150}
+                                height={74}
+                                alt="Logo"
+                            />
+                        </div>
+        <h3 className="text-center mb-4">Forgot Password</h3>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* Email */}
           <div className="mb-3">
-            <label className="form-label">Enter your email</label>
+            <label className="form-label">Enter Your Email</label>
             <input
               type="email"
               className={`form-control ${errors.email ? "is-invalid" : ""}`}
-              placeholder="example@gmail.com"
+              placeholder=""
               {...register("email")}
             />
             {errors.email && (

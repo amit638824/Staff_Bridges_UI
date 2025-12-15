@@ -132,7 +132,7 @@ const SignIn = () => {
                             type="email"
                             className={`form-control ${errors.email ? "is-invalid" : ""
                                 }`}
-                            placeholder="Enter your email"
+                            placeholder=""
                             {...register("email")}
                         />
                         {errors.email && (
@@ -147,16 +147,17 @@ const SignIn = () => {
                         <label className="form-label">
                             Password
                         </label>
+                        <span className="eyeComponent">
                         <input
                             type={showPassword ? "text" : "password"}
                             className={`form-control ${errors.password ? "is-invalid" : ""
                                 }`}
-                            placeholder="Enter your password"
+                            placeholder=""
                             {...register("password")}
                         />
 
                         <span
-                            className="position-absolute top-50 end-0 translate-middle-y me-3"
+                            className="eyeicon"
                             style={{ cursor: "pointer" }}
                             onClick={() =>
                                 setShowPassword(!showPassword)
@@ -168,6 +169,7 @@ const SignIn = () => {
                                 <FaRegEyeSlash />
                             )}
                         </span>
+                        </span>
 
                         {errors.password && (
                             <div className="invalid-feedback">
@@ -176,7 +178,7 @@ const SignIn = () => {
                         )}
 
                         {password && (
-                            <div className="mt-2">
+                            <div className="passwordValidation">
                                 <PasswordChecklist
                                     rules={[
                                         "minLength",
