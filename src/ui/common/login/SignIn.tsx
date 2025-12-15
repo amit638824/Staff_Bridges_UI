@@ -28,6 +28,7 @@ const SignIn = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
+    const [isPasswordValid, setIsPasswordValid] = useState(false);
     const dispatch = useDispatch();
     const router = useRouter();
 
@@ -44,6 +45,12 @@ const SignIn = () => {
         control,
         name: "password",
     });
+ 
+    useEffect(() => {
+        if (!password) {
+            setIsPasswordValid(false);
+        }
+    }, [password]);
     useEffect(() => {
         const rememberData = localStorage.getItem("rememberMe");
         if (rememberData) {
@@ -147,27 +154,29 @@ const SignIn = () => {
                             Password
                         </label>
                         <span className="eyeComponent">
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            className={`form-control ${errors.password ? "is-invalid" : ""
-                                }`}
-                            placeholder=""
-                            {...register("password")}
-                        />
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                className={`form-control ${errors.password ? "is-invalid" : ""
+                                    }`}
+                                placeholder=""
+                                {...register("password")}
+                            />
+                            <span
+                                className="eyeicon"
+                                style={{ cursor: "pointer" }}
+                                onClick={() =>
+                                    setShowPassword(!showPassword)
+                                }
+                            >
+                                {!errors.password && (
+                                    showPassword ? (
+                                        <MdOutlineRemoveRedEye />
+                                    ) : (
+                                        <FaRegEyeSlash />
+                                    )
+                                )}
 
-                        <span
-                            className="eyeicon"
-                            style={{ cursor: "pointer" }}
-                            onClick={() =>
-                                setShowPassword(!showPassword)
-                            }
-                        >
-                            {showPassword ? (
-                                <MdOutlineRemoveRedEye />
-                            ) : (
-                                <FaRegEyeSlash />
-                            )}
-                        </span>
+                            </span>
                         </span>
 
                         {errors.password && (
@@ -177,7 +186,12 @@ const SignIn = () => {
                         )}
 
                         {password && (
-                            <div className="passwordValidation">
+                            <div
+                                className="passwordValidation"
+                                style={{
+                                    display: isPasswordValid ? "none" : "block",
+                                }}
+                            >
                                 <PasswordChecklist
                                     rules={[
                                         "minLength",
@@ -188,16 +202,13 @@ const SignIn = () => {
                                     ]}
                                     minLength={8}
                                     value={password}
+                                    onChange={(isValid) => setIsPasswordValid(isValid)}
                                     messages={{
-                                        minLength:
-                                            "Minimum 8 characters",
-                                        lowercase:
-                                            "One lowercase letter",
-                                        capital:
-                                            "One uppercase letter",
+                                        minLength: "Minimum 8 characters",
+                                        lowercase: "One lowercase letter",
+                                        capital: "One uppercase letter",
                                         number: "One number",
-                                        specialChar:
-                                            "One special character",
+                                        specialChar: "One special character",
                                     }}
                                 />
                             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useForm, useWatch } from "react-hook-form";
@@ -13,6 +13,8 @@ import PasswordChecklist from "react-password-checklist";
 import { recruiterRegistrationService } from "@/services/AuthServices";
 import { showAlert } from "@/utils/swalFire"; 
 import Loader from "../loader/Loader";
+import { useRouter } from "next/router";
+
 /* ---------------- VALIDATION ---------------- */
 const schema = Yup.object().shape({
   email: Yup.string()
@@ -27,7 +29,8 @@ const RecruiterRegistration = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-
+ const [isPasswordValid, setIsPasswordValid] = useState(false);
+ const router=useRouter()
   const {
     register,
     handleSubmit,
@@ -37,11 +40,16 @@ const RecruiterRegistration = () => {
     resolver: yupResolver(schema),
   });
 
-  const password = useWatch({
-    control,
-    name: "password",
-  });
-
+const password = useWatch({
+        control,
+        name: "password",
+    });
+ 
+    useEffect(() => {
+        if (!password) {
+            setIsPasswordValid(false);
+        }
+    }, [password]);
   /* ---------------- SUBMIT ---------------- */
   const onSubmit = async (data: any) => {
     try {
@@ -59,6 +67,7 @@ const RecruiterRegistration = () => {
       }
 
       showAlert("success", res?.message, "Success");
+      router.push("/")
     } catch (error: any) {
       showAlert(
         "error",
@@ -95,7 +104,7 @@ const RecruiterRegistration = () => {
             <input
               type="email"
               className={`form-control ${errors.email ? "is-invalid" : ""}`}
-              placeholder="Enter your email"
+              // placeholder="Enter your email"
               {...register("email")}
             />
             {errors.email && (
@@ -106,52 +115,71 @@ const RecruiterRegistration = () => {
           </div>
 
           {/* PASSWORD */}
-          <div className="mb-3 position-relative">
-            <label className="form-label">Password</label>
-            <input
-              type={showPassword ? "text" : "password"}
-              className={`form-control ${errors.password ? "is-invalid" : ""}`}
-              placeholder="Enter your password"
-              {...register("password")}
-            />
+           <div className="mb-3 position-relative">
+                        <label className="form-label">
+                            Password
+                        </label>
+                        <span className="eyeComponent">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                className={`form-control ${errors.password ? "is-invalid" : ""
+                                    }`}
+                                placeholder=""
+                                {...register("password")}
+                            />
+                            <span
+                                className="eyeicon"
+                                style={{ cursor: "pointer" }}
+                                onClick={() =>
+                                    setShowPassword(!showPassword)
+                                }
+                            >
+                                {!errors.password && (
+                                    showPassword ? (
+                                        <MdOutlineRemoveRedEye />
+                                    ) : (
+                                        <FaRegEyeSlash />
+                                    )
+                                )}
 
-            <span
-              className="position-absolute top-50 end-0 translate-middle-y me-3"
-              style={{ cursor: "pointer" }}
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <MdOutlineRemoveRedEye /> : <FaRegEyeSlash />}
-            </span>
+                            </span>
+                        </span>
 
-            {errors.password && (
-              <div className="invalid-feedback">
-                {errors.password.message}
-              </div>
-            )}
+                        {errors.password && (
+                            <div className="invalid-feedback">
+                                {errors.password.message}
+                            </div>
+                        )}
 
-            {password && (
-              <div className="mt-2">
-                <PasswordChecklist
-                  rules={[
-                    "minLength",
-                    "lowercase",
-                    "capital",
-                    "number",
-                    "specialChar",
-                  ]}
-                  minLength={8}
-                  value={password}
-                  messages={{
-                    minLength: "Minimum 8 characters",
-                    lowercase: "One lowercase letter",
-                    capital: "One uppercase letter",
-                    number: "One number",
-                    specialChar: "One special character",
-                  }}
-                />
-              </div>
-            )}
-          </div>
+                        {password && (
+                            <div
+                                className="passwordValidation"
+                                style={{
+                                    display: isPasswordValid ? "none" : "block",
+                                }}
+                            >
+                                <PasswordChecklist
+                                    rules={[
+                                        "minLength",
+                                        "lowercase",
+                                        "capital",
+                                        "number",
+                                        "specialChar",
+                                    ]}
+                                    minLength={8}
+                                    value={password}
+                                    onChange={(isValid) => setIsPasswordValid(isValid)}
+                                    messages={{
+                                        minLength: "Minimum 8 characters",
+                                        lowercase: "One lowercase letter",
+                                        capital: "One uppercase letter",
+                                        number: "One number",
+                                        specialChar: "One special character",
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
 
           {/* REMEMBER ME */}
           <div className="d-flex justify-content-between mb-3"> 

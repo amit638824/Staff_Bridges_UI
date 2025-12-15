@@ -6,9 +6,9 @@ import Image from "next/image";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { forgotPasswordService } from "@/services/AuthServices";
-import Link from "next/link";
 import { showAlert } from "@/utils/swalFire";
 import Loader from "../loader/Loader";
+import { useRouter } from "next/navigation";
 
 // Yup Schema
 const schema = Yup.object().shape({
@@ -26,7 +26,7 @@ const ForgetPassword = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-
+  const router = useRouter()
   // Submit Handler
   const onSubmit = async (formData: any) => {
     try {
@@ -40,6 +40,7 @@ const ForgetPassword = () => {
 
       if (response.success) {
         reset();
+        // router.push("/")
       }
     } catch (error: any) {
       showAlert(
@@ -52,15 +53,16 @@ const ForgetPassword = () => {
 
   return (
     <div className="d-flex justify-content-center align-items-center vh-100 bg-themebg">
+      {isSubmitting && <Loader />}
       <div className="card p-4 shadow-lg loginBox">
         <div className="logoheader mb-3 text-center">
-                            <Image
-                                src="/assets/images/logo.png"
-                                width={150}
-                                height={74}
-                                alt="Logo"
-                            />
-                        </div>
+          <Image
+            src="/assets/images/logo.png"
+            width={150}
+            height={74}
+            alt="Logo"
+          />
+        </div>
         <h3 className="text-center mb-4">Forgot Password</h3>
 
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -90,7 +92,7 @@ const ForgetPassword = () => {
           </button>
         </form>
 
-        
+
       </div>
     </div>
   );
