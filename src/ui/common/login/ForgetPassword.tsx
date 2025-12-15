@@ -2,12 +2,12 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
+import Image from "next/image";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { forgotPasswordService } from "@/services/AuthServices";
 import Link from "next/link";
 import { showAlert } from "@/utils/swalFire";
-import Image from "next/image";
 import Loader from "../loader/Loader";
 
 // Yup Schema
@@ -52,30 +52,25 @@ const ForgetPassword = () => {
 
   return (
     <div className="d-flex justify-content-center align-items-center vh-100 bg-themebg">
-      {isSubmitting && <Loader />}
-
       <div className="card p-4 shadow-lg loginBox">
         <div className="logoheader mb-3 text-center">
-          <Image
-            src="/assets/images/logo.png"
-            width={150}
-            height={74}
-            alt="Logo"
-          />
-        </div>
-
-        <h3 className="text-center mb-4">
-          Forgot Password
-        </h3>
+                            <Image
+                                src="/assets/images/logo.png"
+                                width={150}
+                                height={74}
+                                alt="Logo"
+                            />
+                        </div>
+        <h3 className="text-center mb-4">Forgot Password</h3>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* Email */}
           <div className="mb-3">
-            <label className="form-label">Enter your email</label>
+            <label className="form-label">Enter Your Email</label>
             <input
               type="email"
               className={`form-control ${errors.email ? "is-invalid" : ""}`}
-              placeholder="example@gmail.com"
+              placeholder=""
               {...register("email")}
             />
             {errors.email && (
@@ -95,11 +90,7 @@ const ForgetPassword = () => {
           </button>
         </form>
 
-        <p className="text-center mt-3 mb-0"> 
-          <Link href="/" className="text-primary">
-            Back to Login
-          </Link>
-        </p>
+        
       </div>
     </div>
   );

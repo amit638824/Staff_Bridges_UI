@@ -4,10 +4,11 @@ body{
   font-style: normal;
   font-size: 14px;
 }
-.loginBox{
-    max-width: 480px;
-    border-radius: 20px;
-    width: 100%;
+.loginBox {
+	border-radius: 20px;
+	width: 100%;
+	max-width: 480px;
+	padding: 30px 40px !important;
 }
 .logoheader {
 	text-align: center;
@@ -32,4 +33,27 @@ body{
 .bg-themebg{
     background: #003C60;
     background: linear-gradient(165deg, rgba(0, 60, 96, 1) 0%, rgba(4, 154, 169, 1) 50%);
+}
+.eyeComponent {
+	position: relative;
+	width: 100%;
+	display: block;
+}
+.eyeicon {
+	position: absolute;
+	right: 10px;
+	top: 7px;
+}
+.passwordValidation {
+	position: absolute;
+	background: #fff;
+	width: 100%;
+	border: 1px solid #ccc;
+	padding: 0 15px;
+}
+.form-control:focus {
+	box-shadow: none;
+}
+.eyeicon svg {
+	font-size: 18px;
 }
