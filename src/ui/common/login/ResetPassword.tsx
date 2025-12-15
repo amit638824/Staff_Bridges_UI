@@ -52,6 +52,7 @@ const ResetPassword = () => {
     const checkResetLink = async () => {
       try {
         if (!token) return;
+         setLoading(true);
         const response = await resetlinkExpireCheckService({ token });
         if (response.success) {
           setIsLinkValid(true);
