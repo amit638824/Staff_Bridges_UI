@@ -1,44 +1,59 @@
-"use client"; 
+"use client";
+
 import { socialLoginService } from "@/services/AuthServices";
 import { GoogleLogin } from "@react-oauth/google";
 import { useDispatch } from "react-redux";
 import { login } from "@/redux/slice/authSlice";
+import { useRouter } from "next/navigation";
 
 export default function GoogleButton() {
-    const dispatch = useDispatch(); 
+    const dispatch = useDispatch();
+    const router = useRouter();
+
     return (
         <GoogleLogin
             onSuccess={async (credentialResponse: any) => {
-                const idToken = credentialResponse.credential;
-                if (!idToken) return; 
+                const idToken = credentialResponse?.credential;
+                if (!idToken) return;
+
                 try {
                     const data = await socialLoginService(idToken);
 
-                    if (data.success) { 
-                        const { token, user } = data.data; 
-                        localStorage.setItem("token", token); 
-                        dispatch(login({ user, token })); 
+                    if (data.success) {
+                        const { token, user } = data.data;
+
+                        // Save token
+                        localStorage.setItem("token", token);
+
+                        // Update redux store
+                        dispatch(login({ user, token }));
                         switch (user.roletbl_roleName) {
-                            case "ADMIN":
-                                window.location.href = "/admin";
+                            case "SUPER_ADMIN":
+                                router.push("/super-admin");
                                 break;
-                            case "MANAGER":
-                                window.location.href = "/manager";
+                            case "OPERATIONS_ADMIN":
+                                router.push("/operations-admin");
+                                break;
+                            case "FINANCE_ADMIN":
+                                router.push("/finance-admin");
+                                break;
+                            case "SUPPORT_ADMIN":
+                                router.push("/support-admin");
                                 break;
                             case "RECRUITER":
-                                window.location.href = "/recruiter";
+                                router.push("/recruiter");
                                 break;
                             default:
-                                window.location.href = "/";
+                                router.push("/");
                         }
                     } else {
                         alert(data.message);
                     }
-                } catch (err) {
-                    console.log("Social Login Error:", err);
+                } catch (error) {
+                    console.error("Social Login Error:", error);
                 }
             }}
-            onError={() => console.log("Login Failed")}
+            onError={() => console.log("Google Login Failed")}
             theme="outline"
             size="large"
             width="100%"

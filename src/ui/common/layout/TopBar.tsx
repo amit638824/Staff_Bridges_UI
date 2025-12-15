@@ -1,14 +1,15 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { RxHamburgerMenu } from "react-icons/rx";
+import { useRouter } from "next/navigation"; 
 import { FaUser, FaSignOutAlt } from "react-icons/fa";
-
+import { logout } from "@/redux/slice/authSlice";
+import { useDispatch } from "react-redux";
+ 
 export default function TopBar() {
   const [openDropdown, setOpenDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-
+const dispatch=useDispatch()
   useEffect(() => {
     const handleClickOutside = (event: any) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -17,14 +18,10 @@ export default function TopBar() {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  //   Logout function
-  const handleLogout = () => {
-    // (Optional) LocalStorage clear
-    localStorage.clear();
-
-    // Redirect to home/login page
+  }, []); 
+  const handleLogout = () => { 
+    localStorage.removeItem('token');
+    dispatch( logout( ) ); 
     router.push("/");
   };
 
@@ -82,3 +79,5 @@ export default function TopBar() {
     </div>
   );
 }
+ 
+
