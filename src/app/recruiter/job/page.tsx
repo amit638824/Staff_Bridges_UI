@@ -1,10 +1,10 @@
 import React from "react";
 import Layout from "@/ui/common/layout/Layout";
-import RecruiterDashboard from "@/ui/recruiter/RecruiterDashboard";
+import RecruiterJob from "@/ui/recruiter/RecruiterJob";
 const Page = () => {
   return (
     <Layout>
-      <RecruiterDashboard />
+      <RecruiterJob />
     </Layout>
   );
 };
