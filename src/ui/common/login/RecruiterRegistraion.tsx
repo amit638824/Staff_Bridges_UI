@@ -13,6 +13,8 @@ import PasswordChecklist from "react-password-checklist";
 import { recruiterRegistrationService } from "@/services/AuthServices";
 import { showAlert } from "@/utils/swalFire"; 
 import Loader from "../loader/Loader";
+import { useRouter } from "next/router";
+
 /* ---------------- VALIDATION ---------------- */
 const schema = Yup.object().shape({
   email: Yup.string()
@@ -28,6 +30,7 @@ const RecruiterRegistration = () => {
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
  const [isPasswordValid, setIsPasswordValid] = useState(false);
+ const router=useRouter()
   const {
     register,
     handleSubmit,
@@ -64,6 +67,7 @@ const password = useWatch({
       }
 
       showAlert("success", res?.message, "Success");
+      router.push("/")
     } catch (error: any) {
       showAlert(
         "error",
