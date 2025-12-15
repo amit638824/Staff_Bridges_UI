@@ -6,6 +6,8 @@
     z-index: 999999;
     background: #000000a3;
     backdrop-filter: blur(10px);
+    left: 0;
+    top: 0;
   }
   .loader-img {
     display: flex;
@@ -13,22 +15,22 @@
     justify-content: center;
     min-height: 100vh;
   }
-  .spinner-border {
-    display: inline-block;
-    width: 120px;
-    height: 120px;
-    vertical-align: text-bottom;
-    border: 0.25em solid currentColor;
-    border-inline-end-color: transparent;
-    border-radius: 50%;
-    -webkit-animation: spinner-border 0.75s linear infinite;
-    animation: spinner-border 0.75s linear infinite;
-    color: #456791;
-    cursor: none !important;
-  }
-  .loader-img svg {
-    position: absolute;
-  }
+.spinner-border {
+	vertical-align: text-bottom;
+	border: .25em solid;
+	color: #029aa7;
+	border-inline-end-color: #0000;
+	border-radius: 50%;
+	width: 140px;
+	height: 140px;
+	animation: .75s linear infinite spinner-border;
+	display: inline-block;
+	cursor: none !important;
+}
+  .loader-img img {
+	position: absolute;
+	width: 100px;
+}
   @-webkit-keyframes spinner-border {
     to {
       -webkit-transform: rotate(360deg);
