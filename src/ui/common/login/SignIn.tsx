@@ -17,279 +17,230 @@ import Loader from "@/ui/common/loader/Loader";
 import { useRouter } from "next/navigation";
 import PasswordChecklist from "react-password-checklist";
 import { useSession } from "@/hooks/useSession";
+
+/* ================= VALIDATION ================= */
 const schema = Yup.object().shape({
-    email: Yup.string()
-        .email("Invalid email format")
-        .required("Email is required"),
-    password: Yup.string()
-        .min(6, "Minimum 6 characters")
-        .required("Password is required"),
+  email: Yup.string().email("Invalid email format").required("Email is required"),
+  password: Yup.string().min(6, "Minimum 6 characters").required("Password is required"),
 });
+
 const SignIn = () => {
-    const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [rememberMe, setRememberMe] = useState(false);
-    const [isPasswordValid, setIsPasswordValid] = useState(false);
-    const dispatch = useDispatch();
-    const router = useRouter();
-    const session = useSession();
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        control,
-        setValue,
-    } = useForm({
-        resolver: yupResolver(schema),
-    });
-    const password = useWatch({
-        control,
-        name: "password",
-    });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
 
-    useEffect(() => {
-        if (!password) {
-            setIsPasswordValid(false);
-        }
-    }, [password]);
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const session = useSession();
 
-    useEffect(() => {
-        if (!session) return; 
-        const role = session.user?.roletbl_roleName; 
-        switch (role) {
-            case "SUPER_ADMIN":
-                router.replace("/super-admin");
-                break;
-            case "OPERATIONS_ADMIN":
-                router.replace("/operations-admin");
-                break;
-            case "FINANCE_ADMIN":
-                router.replace("/finance-admin");
-                break;
-            case "SUPPORT_ADMIN":
-                router.replace("/support-admin");
-                break;
-            case "RECRUITER":
-                router.replace("/recruiter");
-                break;
-            default:
-                router.replace("/");
-        }
-    }, [  ]);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    control,
+    setValue,
+  } = useForm({
+    resolver: yupResolver(schema),
+  });
 
+  const password = useWatch({ control, name: "password" });
 
-    useEffect(() => {
-        const rememberData = localStorage.getItem("rememberMe");
-        if (rememberData) {
-            const parsed = JSON.parse(rememberData);
-            setValue("email", parsed.email);
-            setValue("password", parsed.password);
-            setRememberMe(true);
-        }
-    }, [setValue]);
-    const onSubmit = async (formData: any) => {
-        try {
-            setLoading(true);
-            const response = await loginService(formData);
-            if (!response?.success) {
-                return showAlert("error", response?.message || "Login failed", "Failed");
-            }
+  /* ================= PASSWORD CHECK ================= */
+  useEffect(() => {
+    if (!password) setIsPasswordValid(false);
+  }, [password]);
 
-            if (rememberMe) {
-                localStorage.setItem("rememberMe", JSON.stringify({ email: formData.email, password: formData.password, })
-                );
-            } else {
-                localStorage.removeItem("rememberMe");
-            }
-            localStorage.setItem("token", response.data.token);
+  /* ================= AUTO REDIRECT IF ALREADY LOGGED IN ================= */
+  useEffect(() => {
+    if (!session?.isLoggedIn) return;
 
-            dispatch(
-                login({ user: response.data.user, token: response.data.token, })
-            );
-            const role = response.data.user?.roletbl_roleName;
-            switch (role) {
-                case "SUPER_ADMIN":
-                    router.push("/super-admin");
-                    break;
-                case "OPERATIONS_ADMIN":
-                    router.push("/operations-admin");
-                    break;
-                case "FINANCE_ADMIN":
-                    router.push("/finance-admin");
-                    break;
-                case "SUPPORT_ADMIN":
-                    router.push("/support-admin");
-                    break;
-                case "RECRUITER":
-                    router.push("/recruiter");
-                    break;
-                default:
-                    router.push("/");
-            }
-        } catch (error: any) {
-            showAlert(
-                "error",
-                error?.response?.data?.message || "Something went wrong!",
-                "Login Failed"
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
+    const role = session.user?.roletbl_roleName;
 
-    return (
-        <div className="d-flex justify-content-center align-items-center vh-100 bg-themebg">
-            {loading && <Loader />}
+    switch (role) {
+      case "SUPER_ADMIN":
+        router.replace("/super-admin");
+        break;
+      case "OPERATIONS_ADMIN":
+        router.replace("/operations-admin");
+        break;
+      case "FINANCE_ADMIN":
+        router.replace("/finance-admin");
+        break;
+      case "SUPPORT_ADMIN":
+        router.replace("/support-admin");
+        break;
+      case "RECRUITER":
+        router.replace("/recruiter");
+        break;
+      default:
+        router.replace("/");
+    }
+  }, [session, router]);
 
-            <div className="card p-4 shadow-lg loginBox">
-                <div className="logoheader mb-3 text-center">
-                    <Image
-                        src="/assets/images/logo.png"
-                        width={150}
-                        height={74}
-                        alt="Logo"
-                    />
-                </div>
+  /* ================= REMEMBER ME ================= */
+  useEffect(() => {
+    const rememberData = localStorage.getItem("rememberMe");
+    if (rememberData) {
+      const parsed = JSON.parse(rememberData);
+      setValue("email", parsed.email);
+      setValue("password", parsed.password);
+      setRememberMe(true);
+    }
+  }, [setValue]);
 
-                <h3 className="text-center mb-4">
-                    Welcome to Staff Bridges!
-                </h3>
+  /* ================= LOGIN SUBMIT ================= */
+  const onSubmit = async (formData: any) => {
+    try {
+      setLoading(true);
 
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    {/* EMAIL */}
-                    <div className="mb-3">
-                        <label className="form-label">
-                            Email Address
-                        </label>
-                        <input
-                            type="email"
-                            className={`form-control ${errors.email ? "is-invalid" : ""
-                                }`}
-                            placeholder=""
-                            {...register("email")}
-                        />
-                        {errors.email && (
-                            <div className="invalid-feedback">
-                                {errors.email.message}
-                            </div>
-                        )}
-                    </div>
+      const response = await loginService(formData);
+      if (!response?.success) {
+        return showAlert("error", response?.message || "Login failed", "Failed");
+      }
 
-                    {/* PASSWORD */}
-                    <div className="mb-3 position-relative">
-                        <label className="form-label">
-                            Password
-                        </label>
-                        <span className="eyeComponent">
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                className={`form-control ${errors.password ? "is-invalid" : ""
-                                    }`}
-                                placeholder=""
-                                {...register("password")}
-                            />
-                            <span
-                                className="eyeicon"
-                                style={{ cursor: "pointer" }}
-                                onClick={() =>
-                                    setShowPassword(!showPassword)
-                                }
-                            >
-                                {!errors.password && (
-                                    showPassword ? (
-                                        <MdOutlineRemoveRedEye />
-                                    ) : (
-                                        <FaRegEyeSlash />
-                                    )
-                                )}
+      if (rememberMe) {
+        localStorage.setItem(
+          "rememberMe",
+          JSON.stringify({ email: formData.email, password: formData.password })
+        );
+      } else {
+        localStorage.removeItem("rememberMe");
+      }
 
-                            </span>
-                        </span>
+      localStorage.setItem("token", response.data.token);
 
-                        {errors.password && (
-                            <div className="invalid-feedback">
-                                {errors.password.message}
-                            </div>
-                        )}
+      dispatch(login({ user: response.data.user, token: response.data.token }));
 
-                        {password && (
-                            <div
-                                className="passwordValidation"
-                                style={{
-                                    display: isPasswordValid ? "none" : "block",
-                                }}
-                            >
-                                <PasswordChecklist
-                                    rules={[
-                                        "minLength",
-                                        "lowercase",
-                                        "capital",
-                                        "number",
-                                        "specialChar",
-                                    ]}
-                                    minLength={8}
-                                    value={password}
-                                    onChange={(isValid) => setIsPasswordValid(isValid)}
-                                    messages={{
-                                        minLength: "Minimum 8 characters",
-                                        lowercase: "One lowercase letter",
-                                        capital: "One uppercase letter",
-                                        number: "One number",
-                                        specialChar: "One special character",
-                                    }}
-                                />
-                            </div>
-                        )}
-                    </div>
+      const role = response.data.user?.roletbl_roleName;
 
-                    {/* REMEMBER ME */}
-                    <div className="d-flex justify-content-between mb-3">
-                        <div>
-                            <input
-                                type="checkbox"
-                                id="remember"
-                                checked={rememberMe}
-                                onChange={(e) =>
-                                    setRememberMe(e.target.checked)
-                                }
-                            />
-                            <label
-                                htmlFor="remember"
-                                className="ms-2"
-                            >
-                                Remember me
-                            </label>
-                        </div>
+      switch (role) {
+        case "SUPER_ADMIN":
+          router.replace("/super-admin");
+          break;
+        case "OPERATIONS_ADMIN":
+          router.replace("/operations-admin");
+          break;
+        case "FINANCE_ADMIN":
+          router.replace("/finance-admin");
+          break;
+        case "SUPPORT_ADMIN":
+          router.replace("/support-admin");
+          break;
+        case "RECRUITER":
+          router.replace("/recruiter");
+          break;
+        default:
+          router.replace("/");
+      }
+    } catch (error: any) {
+      showAlert(
+        "error",
+        error?.response?.data?.message || "Something went wrong!",
+        "Login Failed"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                        <Link
-                            href="/forget-password"
-                            className="themeBlue"
-                        >
-                            Forgot Password?
-                        </Link>
-                    </div>
-                    <button
-                        className="btn btn-primary w-100"
-                        disabled={loading}
-                    >
-                        Login
-                    </button>
-                </form>
-                <div className="text-center mt-3">
-                    <p>
-                        Don’t have an account?{" "}
-                        <Link
-                            href="/signup"
-                            className="themeBlue"
-                        >
-                            Sign up
-                        </Link>
-                    </p>
-                    <GoogleButton />
-                </div>
-            </div>
+  /* ================= UI ================= */
+  return (
+    <div className="d-flex justify-content-center align-items-center vh-100 bg-themebg">
+      {loading && <Loader />}
+
+      <div className="card p-4 shadow-lg loginBox">
+        <div className="logoheader mb-3 text-center">
+          <Image src="/assets/images/logo.png" width={150} height={74} alt="Logo" />
         </div>
-    );
+
+        <h3 className="text-center mb-4">Welcome to Staff Bridges!</h3>
+
+        <form onSubmit={handleSubmit(onSubmit)}>
+          {/* EMAIL */}
+          <div className="mb-3">
+            <label className="form-label">Email Address</label>
+            <input
+              type="email"
+              className={`form-control ${errors.email ? "is-invalid" : ""}`}
+              {...register("email")}
+            />
+            {errors.email && <div className="invalid-feedback">{errors.email.message}</div>}
+          </div>
+
+          {/* PASSWORD */}
+          <div className="mb-3 position-relative">
+            <label className="form-label">Password</label>
+
+            <span className="eyeComponent">
+              <input
+                type={showPassword ? "text" : "password"}
+                className={`form-control ${errors.password ? "is-invalid" : ""}`}
+                {...register("password")}
+              />
+
+              <span
+                className="eyeicon"
+                style={{ cursor: "pointer" }}
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {!errors.password &&
+                  (showPassword ? <MdOutlineRemoveRedEye /> : <FaRegEyeSlash />)}
+              </span>
+            </span>
+
+            {errors.password && (
+              <div className="invalid-feedback">{errors.password.message}</div>
+            )}
+
+            {password && (
+              <div
+                className="passwordValidation"
+                style={{ display: isPasswordValid ? "none" : "block" }}
+              >
+                <PasswordChecklist
+                  rules={["minLength", "lowercase", "capital", "number", "specialChar"]}
+                  minLength={8}
+                  value={password}
+                  onChange={(isValid) => setIsPasswordValid(isValid)}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* REMEMBER */}
+          <div className="d-flex justify-content-between mb-3">
+            <div>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <label className="ms-2">Remember me</label>
+            </div>
+
+            <Link href="/forget-password" className="themeBlue">
+              Forgot Password?
+            </Link>
+          </div>
+
+          <button className="btn btn-primary w-100" disabled={loading}>
+            Login
+          </button>
+        </form>
+
+        <div className="text-center mt-3">
+          <p>
+            Don’t have an account?{" "}
+            <Link href="/signup" className="themeBlue">
+              Sign up
+            </Link>
+          </p>
+          <GoogleButton />
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default SignIn;
