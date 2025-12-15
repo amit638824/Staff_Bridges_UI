@@ -1,0 +1,44 @@
+.loader-component {
+    width: 100%;
+    min-height: 100vh;
+    height: 100%;
+    position: fixed;
+    z-index: 999999;
+    background: #000000a3;
+    backdrop-filter: blur(10px);
+  }
+  .loader-img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .spinner-border {
+    display: inline-block;
+    width: 120px;
+    height: 120px;
+    vertical-align: text-bottom;
+    border: 0.25em solid currentColor;
+    border-inline-end-color: transparent;
+    border-radius: 50%;
+    -webkit-animation: spinner-border 0.75s linear infinite;
+    animation: spinner-border 0.75s linear infinite;
+    color: #456791;
+    cursor: none !important;
+  }
+  .loader-img svg {
+    position: absolute;
+  }
+  @-webkit-keyframes spinner-border {
+    to {
+      -webkit-transform: rotate(360deg);
+      transform: rotate(360deg);
+    }
+  }
+  
+  @keyframes spinner-border {
+    to {
+      -webkit-transform: rotate(360deg);
+      transform: rotate(360deg);
+    }
+  }
