@@ -26,7 +26,7 @@ const schema = Yup.object().shape({
 });
 const SignIn = () => {
     const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [rememberMe, setRememberMe] = useState(false);
     const dispatch = useDispatch();
     const router = useRouter();
