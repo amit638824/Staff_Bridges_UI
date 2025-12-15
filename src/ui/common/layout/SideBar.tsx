@@ -1,15 +1,17 @@
-import React from "react";
-import {
-  FaHome,
-  FaBriefcase,
-  FaEllipsisH,
-  FaUser,
-} from "react-icons/fa";
+"use client";
 
-import {
-  TbLayoutSidebarRightExpand,
-  TbLayoutSidebarRightCollapse,
-} from "react-icons/tb";
+import React from "react";
+import Link from "next/link";
+import { FaHome, FaBriefcase, FaEllipsisH, FaUser } from "react-icons/fa";
+import { FaDatabase } from "react-icons/fa6";
+import { TbLayoutSidebarRightExpand, TbLayoutSidebarRightCollapse } from "react-icons/tb";
+
+const menuItems = [
+  { icon: <FaHome size={18} />, label: "Home", path: "/recruiter" },
+  { icon: <FaBriefcase size={18} />, label: "Jobs", path: "/recruiter/job" },
+  { icon: <FaDatabase size={18} />, label: "Database", path: "/recruiter/database" },
+  { icon: <FaEllipsisH size={18} />, label: "More", path: "#" },
+];
 
 export default function SideBar({
   isOpen,
@@ -20,13 +22,13 @@ export default function SideBar({
 }) {
   return (
     <div
-      className="   vh-100 position-relative"
+      className="vh-100 position-relative bg-light"
       style={{
         width: isOpen ? 260 : 80,
         transition: "0.3s",
       }}
     >
-      {/* ChatGPT Style Toggle Button */}
+      {/* Toggle Button */}
       <button
         onClick={toggle}
         className="position-absolute top-0 end-0 mt-3 me-3 d-flex align-items-center justify-content-center border rounded"
@@ -47,26 +49,22 @@ export default function SideBar({
 
       {/* Logo */}
       <div className="d-flex align-items-center gap-2 mt-4 px-3">
-        <img
-          src="/logo.svg"
-          width={30}
-          alt=""
-          className="me-2"
-        />
+        <img src="/logo.svg" width={30} alt="" className="me-2" />
         {isOpen && <h5 className="m-0">STAFF BRIDGES</h5>}
       </div>
 
       {/* Menu */}
       <ul className="list-unstyled mt-4 px-3">
-        <li className="mb-3 d-flex align-items-center gap-3">
-          <FaHome size={18} /> {isOpen && <span>Home</span>}
-        </li>
-        <li className="mb-3 d-flex align-items-center gap-3">
-          <FaBriefcase size={18} /> {isOpen && <span>Jobs</span>}
-        </li>
-        <li className="mb-3 d-flex align-items-center gap-3">
-          <FaEllipsisH size={18} /> {isOpen && <span>More</span>}
-        </li>
+        {menuItems.map((item, index) => (
+          <li key={index} className="mb-3">
+            <Link
+              href={item.path}
+              className="d-flex align-items-center gap-3 text-decoration-none text-dark"
+            >
+              {item.icon} {isOpen && <span>{item.label}</span>}
+            </Link>
+          </li>
+        ))}
       </ul>
 
       {/* User Bottom */}
