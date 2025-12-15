@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 
 const schema = Yup.object().shape({
   password: Yup.string()
-    .min(6, "Minimum 6 characters required")
+    .min(8, "Minimum 8 characters required")
     .required("New password is required"),
 
   confirmPassword: Yup.string()
