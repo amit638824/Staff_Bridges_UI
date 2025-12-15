@@ -6,12 +6,13 @@ export const loginService = async (data: any) => {
   return res.data;  
 };
 
+export const recruiterRegistrationService = async (data: any) => {
+  const res = await axiosInstance.post("/auth/recruiter-register", data);
+  return res.data;
+};
 
-// 🔹 Forgot Password Service
-export const forgotPasswordService = async (email: string ) => {
- let url=`/auth/forget-password?`;
- 
-
+// 🔹 Forgot Password Service   
+export const forgotPasswordService = async (email: string ) => { 
   const res = await axiosInstance.post("/auth/forget-password", { email });
   return res.data;
 };
