@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { FaHome, FaBriefcase, FaEllipsisH, FaUser } from "react-icons/fa";
 import { FaDatabase } from "react-icons/fa6";
@@ -22,35 +23,27 @@ export default function SideBar({
 }) {
   return (
     <div
-      className="vh-100 position-relative bg-light"
+      className="vh-100 position-relative side-nav-area"
       style={{
         width: isOpen ? 260 : 80,
         transition: "0.3s",
       }}
     >
-      {/* Toggle Button */}
+      
+
+      {/* Logo */}
+      <div className="sidebar-logo">
+        <Image src="/assets/images/logo.png" alt="" height={38} width={77} />
+        {/* Toggle Button */}
       <button
         onClick={toggle}
-        className="position-absolute top-0 end-0 mt-3 me-3 d-flex align-items-center justify-content-center border rounded"
-        style={{
-          width: 35,
-          height: 25,
-          background: "transparent",
-          borderColor: "#a79393ff",
-          cursor: "pointer",
-        }}
-      >
+        className="toggleButton">
         {isOpen ? (
           <TbLayoutSidebarRightCollapse size={18} color="#bbb" />
         ) : (
           <TbLayoutSidebarRightExpand size={18} color="#bbb" />
         )}
       </button>
-
-      {/* Logo */}
-      <div className="d-flex align-items-center gap-2 mt-4 px-3">
-        <img src="/logo.svg" width={30} alt="" className="me-2" />
-        {isOpen && <h5 className="m-0">STAFF BRIDGES</h5>}
       </div>
 
       {/* Menu */}
