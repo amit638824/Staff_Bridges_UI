@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "bootstrap/dist/css/bootstrap.css";
-import "bootstrap/dist/js/bootstrap.bundle.js";
+// import "bootstrap/dist/js/bootstrap.bundle.js";
 import "@/styles/main.css";
 import "@/styles/responsive.css";
 import GoogleProviderWrapper from "@/ui/common/login/GoogleProviderWrapper";
@@ -28,14 +28,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.className}>
       <body>
-        <BootstrapClient>
-        <StoreProvider>
+       <BootstrapClient />
+         <StoreProvider>
          <GoogleProviderWrapper>
           {children}
         </GoogleProviderWrapper>
         </StoreProvider>
-        </ BootstrapClient>
+          
       </body>
+     
     </html>
   );
 }
