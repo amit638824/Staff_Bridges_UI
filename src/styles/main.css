@@ -57,3 +57,30 @@ body{
 .eyeicon svg {
 	font-size: 18px;
 }
+.side-nav-area {
+	background: #fff;
+	border-right: 1px solid #e2e8f0;
+}
+.sidebar-logo {
+	padding: 10px 15px;
+	border-bottom: 1px solid #e2e8f0;
+	min-height: 66px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+.topBar-area {
+	border-bottom: 1px solid #e2e8f0;
+	padding: 10px 15px;
+	height: 66px;
+}
+.toggleButton {
+	background: transparent;
+	border: none;
+}
+.toggleButton svg {
+	font-size: 22px !important;
+	color: #393B40 !important;
+	width: 22px !important;
+	height: 22px !important;
+}

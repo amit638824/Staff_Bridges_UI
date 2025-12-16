@@ -27,14 +27,7 @@ const dispatch=useDispatch()
 
   return (
     <div
-      className="d-flex align-items-center justify-content-between px-3 border-bottom bg-white"
-      style={{
-        height: "50px",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-        position: "relative",
-        zIndex: 20,
-      }}
-    >
+      className="d-flex align-items-center justify-content-between px-3 topBar-area">
       <div className="position-relative ms-auto" ref={dropdownRef}>
 
         <img

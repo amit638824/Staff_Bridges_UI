@@ -1,5 +1,5 @@
 import React from 'react'
-import Layout from '@/ui/common/layout/Layout'
+import Layout from '@/ui/common/layout/recruiterLayout/Layout'
 const page = () => {
   return (
     <Layout>

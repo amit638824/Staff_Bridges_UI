@@ -1,4 +1,4 @@
-import Layout from '@/ui/common/layout/Layout'
+import Layout from '@/ui/common/layout/recruiterLayout/Layout'
 import React from 'react'
 
 const page = () => {

@@ -5,6 +5,7 @@ import SideBar from "./SideBar";
 import TopBar from "./TopBar";
 import { useSession } from "@/hooks/useSession";
 import { useRouter, usePathname } from "next/navigation";
+import "./recruiter.css"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
