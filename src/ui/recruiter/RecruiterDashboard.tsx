@@ -82,7 +82,7 @@ const RecruiterDashboard = () => {
                       </div>
                       <div className='card-content'>
                         <div className='checkboxText'>
-                          <input className="form-check-input" type="checkbox" value="" checked id="flexCheckDefault" />
+                          <input className="form-check-input" type="checkbox" value="" defaultChecked id="flexCheckDefault" />
                           <span>Create an account</span>
                         </div>
                         <div className='buttonstatus'>
@@ -93,7 +93,7 @@ const RecruiterDashboard = () => {
 
                       <div className='card-content'>
                         <div className='checkboxText'>
-                          <input className="form-check-input" type="checkbox" value="" checked id="flexCheckDefault" />
+                          <input className="form-check-input" type="checkbox" value="" defaultChecked id="flexCheckDefault" />
                           <span>Post your first job</span>
                         </div>
                         <div className='buttonstatus'>
@@ -104,7 +104,7 @@ const RecruiterDashboard = () => {
 
                       <div className='card-content'>
                         <div className='checkboxText'>
-                          <input className="form-check-input" type="checkbox" value="" checked id="flexCheckDefault" />
+                          <input className="form-check-input" type="checkbox" value="" defaultChecked id="flexCheckDefault" />
                           <span>Email Verification</span>
                         </div>
                         <div className='buttonstatus'>
