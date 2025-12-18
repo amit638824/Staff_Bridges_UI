@@ -167,3 +167,12 @@
 	background-color: #fff;
 	color: #000;
 }
+.d-md-flex.roundbtn {
+	flex-wrap: wrap;
+}
+.mutipleSelctBox {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 20px;
+}
