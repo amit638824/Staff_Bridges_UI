@@ -13,9 +13,7 @@ export default function TopBar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const data = useSession();
-  const user = useUser();
-  console.log(user);
-
+  const user = useUser(); 
   const dispatch = useDispatch();
   useEffect(() => {
     fectUserDetail()

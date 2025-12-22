@@ -15,7 +15,7 @@ const RecruiterDashboard = () => {
           <div className='row'>
             <div className='col-md-12'>
               <div className='welcomeheading'>
-                <h1>Welcome back,  {user?.user_fullName || "Guest User"} !</h1>
+                <h1>Welcome back,  {user?.user_fullName || "Guest User"}!</h1>
                 <Link href="#" className="btn btn-primary">Post a Job</Link>
               </div>
             </div>

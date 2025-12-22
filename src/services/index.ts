@@ -1,13 +1,21 @@
 import axios from "axios";
 
+// Determine base URL based on environment
+const BASE_URL =
+  process.env.NEXT_PUBLIC_DEVELOPMENT_MODE =="test"
+    ? "http://localhost:4600"
+    : "https://staffbridgesapi.techwagger.com";
+
+console.log(process.env.NEXT_PUBLIC_DEVELOPMENT_MODE,"Axios Base URL:", BASE_URL);
+
 const axiosInstance = axios.create({
-  baseURL: "https://staffbridgesapi.techwagger.com/",   //  
+  baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Optional: Token add automatically
+// Optional: Add token automatically
 axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -17,5 +25,3 @@ axiosInstance.interceptors.request.use((config) => {
 });
 
 export default axiosInstance;
-
-
