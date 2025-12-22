@@ -12,66 +12,19 @@ import {
   masterJobSKillsService,
   masterDocumentsService,
 } from "@/services/masterData";
+import ServerSearchSelect from '@/components/Common/SearchableSelect';
 const RecruiterJob = () => {
-  const [categories, setCategories] = useState([]);
-  const [jobTitles, setJobTitles] = useState([]);
-  const [cities, setCities] = useState([]);
-  const [localities, setLocalities] = useState([]);
+
+  const [jobTitle, setJobTitle] = useState(null);
+  const [category, setCategory] = useState(null);
+  const [city, setCity] = useState(null);
+  const [locality, setLocality] = useState(null);
+
   const [benefits, setBenefits] = useState([]);
   const [skills, setSkills] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchAllData = async () => {
-    setLoading(true);
-    try {
-      const [
-        categoriesData,
-        jobTitlesData,
-        citiesData,
-        localitiesData,
-        benefitsData,
-        skillsData,
-        documentsData,
-      ] = await Promise.all([
-        masterCategoryService(""),
-        masterJobTitleService(""),
-        masterCityService(""),
-        masterLocalityService(""),
-        masterBenifitsService(""),
-        masterJobSKillsService(""),
-        masterDocumentsService(""),
-      ]);
-
-      setCategories(categoriesData?.data?.items ?? []);
-      setJobTitles(jobTitlesData?.data?.items ?? []);
-      setCities(citiesData?.data?.items ?? []);
-      setLocalities(localitiesData?.data?.items ?? []);
-      setBenefits(benefitsData?.data?.items ?? []);
-      setSkills(skillsData?.data?.items ?? []);
-      setDocuments(documentsData?.data?.items ?? []);
-
-     
-    } catch (err) {
-      console.error("Error fetching data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAllData();
-  }, []);
-
-   console.log({
-        categories,
-        jobTitles,
-        cities,
-        localities,
-        benefits,
-        skills,
-        documents,
-      });
   return (
     <div className='jobposting'>
       {loading && <Loader />}
@@ -84,29 +37,28 @@ const RecruiterJob = () => {
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Job Title<span className='redastric'>*</span></label>
-                      <select className="form-select" aria-label="Default select example">
-                        <option value="" disabled>Select job title</option>
-                         {categories?.map((item:any)=>{  
-                          return(<>
-                          <option value={item?.id}>{item?.name}</option>
-                          </>)
-
-                         })}
-                      </select>
+                      <ServerSearchSelect
+                        placeholder="Search job title"
+                        value={jobTitle}
+                        onChange={setJobTitle}
+                        fetchOptions={(input: any, config: any) =>
+                          masterJobTitleService(input, config)
+                        }
+                      />
                     </div>
                   </div>
 
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Job Category<span className='redastric'>*</span></label>
-                      <select className="form-select" aria-label="Default select example">
-                        <option value="" disabled>Select job title</option>
-                         {jobTitles?.map((item:any)=>{  
-                          return(<>
-                          <option value={item?.id}>{item?.name}</option>
-                          </>)  
-                         })}
-                      </select>
+                      <ServerSearchSelect
+                        placeholder="Search job Category"
+                        value={category}
+                        onChange={setCategory}
+                        fetchOptions={(input:any, config:any) =>
+                          masterCategoryService(input, config)
+                        }
+                      />
                     </div>
                   </div>
 
@@ -148,12 +100,14 @@ const RecruiterJob = () => {
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Choose City<span className='redastric'>*</span></label>
-                      <select className="form-select" aria-label="Default select example">
-                        <option value="" disabled>Select city</option>
-                        <option value="1">Lucknow</option>
-                        <option value="2">Barabanki</option>
-                        <option value="3">Gonda</option>
-                      </select>
+                      <ServerSearchSelect
+                        placeholder="Search City"
+                        value={city}
+                        onChange={setCity}
+                        fetchOptions={(input:any, config:any) =>
+                          masterCityService(input, config)
+                        }
+                      />
                     </div>
                   </div>
 
@@ -163,12 +117,14 @@ const RecruiterJob = () => {
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Job Locality<span className='redastric'>*</span></label>
-                      <select className="form-select" aria-label="Default select example">
-                        <option value="" disabled>Select locality</option>
-                        <option value="1">Lucknow</option>
-                        <option value="2">Barabanki</option>
-                        <option value="3">Gonda</option>
-                      </select>
+                      <ServerSearchSelect
+                        placeholder="Search Locality"
+                        value={locality}
+                        onChange={setLocality}
+                        fetchOptions={(input:any, config:any) =>
+                          masterLocalityService(input, config)
+                        }
+                      />
                     </div>
                   </div>
 
