@@ -1,15 +1,31 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import { FaUser, FaSignOutAlt } from "react-icons/fa";
 import { logout } from "@/redux/slice/authSlice";
+import { setUserDetails, clearUserDetails } from "@/redux/slice/userDetailSlice";
 import { useDispatch } from "react-redux";
- 
+import { userDetailService } from "@/services/AuthServices";
+import { useSession, useUser } from "@/hooks/useSession";
+
 export default function TopBar() {
   const [openDropdown, setOpenDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-const dispatch=useDispatch()
+  const data = useSession();
+  const user = useUser();
+  console.log(user);
+
+  const dispatch = useDispatch();
+  useEffect(() => {
+    fectUserDetail()
+  }, [])
+  const fectUserDetail = async () => {
+    const result = await userDetailService(data?.user?.user_id);
+    dispatch(setUserDetails(result?.data));
+
+  }
+
   useEffect(() => {
     const handleClickOutside = (event: any) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -18,10 +34,11 @@ const dispatch=useDispatch()
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []); 
-  const handleLogout = () => { 
+  }, []);
+  const handleLogout = () => {
     localStorage.removeItem('token');
-    dispatch( logout( ) ); 
+    dispatch(logout());
+    dispatch(clearUserDetails())
     router.push("/");
   };
 
@@ -29,9 +46,8 @@ const dispatch=useDispatch()
     <div
       className="d-flex align-items-center justify-content-between px-3 topBar-area">
       <div className="position-relative ms-auto" ref={dropdownRef}>
-
         <img
-          src="https://i.pravatar.cc/40?img=12"
+          src={user?.user_profilePic ? user?.user_profilePic : "https://i.pravatar.cc/40?img=12"}//
           alt="profile"
           width={38}
           height={38}
@@ -49,8 +65,13 @@ const dispatch=useDispatch()
             className="bg-white shadow position-absolute end-0 mt-2 p-3 rounded"
             style={{ width: "260px", top: "45px" }}
           >
-            <h6 className="fw-bold m-0">Amit Singh</h6>
-            <p className="text-muted small mb-3">amit.chauhan@techwagger.com</p>
+            <h6 className="fw-bold m-0">
+              {user?.user_fullName || "Guest User"}
+            </h6>
+            <p className="text-muted small mb-3">
+              {user?.user_email || "Email not available"}
+            </p>
+
 
             <div className="d-flex align-items-center gap-2 mb-3" style={{ cursor: "pointer" }}>
               <FaUser size={16} />
@@ -72,5 +93,5 @@ const dispatch=useDispatch()
     </div>
   );
 }
- 
+
 

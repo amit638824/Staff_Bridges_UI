@@ -73,8 +73,8 @@ const SignIn = () => {
       case "RECRUITER":
         router.replace("/recruiter");
         break;
-      default:
-        router.replace("/");
+      // default:
+      //   router.replace("/");
     }
   }, [session, router]);
 
