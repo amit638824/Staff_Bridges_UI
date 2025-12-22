@@ -33,3 +33,9 @@ export const resetPasswordService = async (data: any) => {
 };
 
 
+ export const userDetailService = async (id: string) => {
+  const res = await axiosInstance.get(`/auth/user-info?id=${id}`);
+  return res.data;
+};
+
+

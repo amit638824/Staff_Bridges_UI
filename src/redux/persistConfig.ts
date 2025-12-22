@@ -1,9 +1,9 @@
-import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
-import { PersistConfig } from 'redux-persist';
-import { RootState } from '@/redux/store';
+import storage from 'redux-persist/lib/storage'; 
 
-export const persistConfig: PersistConfig<RootState> = {
+const persistConfig: any = {
   key: 'root',
   storage,
-  whitelist: ['user'], // slices you want to persist
+  whitelist: ['user',"userDetail"],
 };
+
+export default persistConfig;
