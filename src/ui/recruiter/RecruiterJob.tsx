@@ -55,7 +55,7 @@ const RecruiterJob = () => {
                         placeholder="Search job Category"
                         value={category}
                         onChange={setCategory}
-                        fetchOptions={(input:any, config:any) =>
+                        fetchOptions={(input: any, config: any) =>
                           masterCategoryService(input, config)
                         }
                       />
@@ -104,7 +104,7 @@ const RecruiterJob = () => {
                         placeholder="Search City"
                         value={city}
                         onChange={setCity}
-                        fetchOptions={(input:any, config:any) =>
+                        fetchOptions={(input: any, config: any) =>
                           masterCityService(input, config)
                         }
                       />
@@ -121,7 +121,7 @@ const RecruiterJob = () => {
                         placeholder="Search Locality"
                         value={locality}
                         onChange={setLocality}
-                        fetchOptions={(input:any, config:any) =>
+                        fetchOptions={(input: any, config: any) =>
                           masterLocalityService(input, config)
                         }
                       />
@@ -160,24 +160,10 @@ const RecruiterJob = () => {
                     <div className="mb-3">
                       <label className="form-label">Required Experience<span className='redastric'>*</span></label>
                       <div className="mutipleSelctBox">
-                        <select className="form-select" aria-label="Default select example">
-                          <option value="" disabled>Min Exp.</option>
-                          <option value="1">Lucknow</option>
-                          <option value="2">Barabanki</option>
-                          <option value="3">Gonda</option>
-                        </select>
+                        <input type="text" className="form-control" id="exampleFormControlInput1" placeholder="e.g. 1" />
                         <span className='toSeprate'>To</span>
-                        <select className="form-select" aria-label="Default select example">
-                          <option value="" disabled>Max Exp.</option>
-                          <option value="1">Lucknow</option>
-                          <option value="2">Barabanki</option>
-                          <option value="3">Gonda</option>
-                        </select>
-                      </div>
-                      <div className="mb-3 form-check">
-                        <input type="checkbox" className="form-check-input" id="exampleCheck1" />
-                        <label className="form-check-label">It is a Contract Job </label>
-                      </div>
+                        <input type="text" className="form-control" id="exampleFormControlInput1" placeholder="e.g. 1" />
+                      </div> 
 
                     </div>
                   </div>
