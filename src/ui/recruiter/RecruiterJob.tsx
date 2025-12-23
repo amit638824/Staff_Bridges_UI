@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from 'react'
 import { GoPlus } from "react-icons/go";
 import { IoCheckmark } from "react-icons/io5";
+import { useForm, Controller, useWatch } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import Loader from "@/ui/common/loader/Loader"
 import {
   masterCategoryService,
@@ -11,164 +14,681 @@ import {
   masterBenifitsService,
   masterJobSKillsService,
   masterDocumentsService,
+  masterAssetsRequiredService
 } from "@/services/masterData";
+import ServerSearchSelect from '@/components/Common/SearchableSelect';
+import MultiSelectWithServerSearch from '@/components/Common/MultiSelectWithServerSearch';
+import RichTextEditor from '@/components/Common/RichTextEditors';
+
+interface SelectOption {
+  value: number;
+  label: string;
+}
+
+interface FormValues {
+  // Basic Information
+  jobTitle: SelectOption | null;
+  category: SelectOption | null;
+  openings: string;
+  jobType: string;
+  isContractJob: boolean;
+  workLocation: string;
+
+  // Location & Demographics
+  city: SelectOption | null;
+  locality: SelectOption | null;
+  gender: string;
+  qualification: string;
+
+  // Experience & Salary
+  minExperience: string;
+  maxExperience: string;
+  onlyFresher: boolean;
+  salaryBenefits: string;
+  salaryMin: string;
+  salaryMax: string;
+
+  // Job Details
+  benefits: SelectOption[];
+  skills: SelectOption[];
+  documents: SelectOption[];
+  workingDays: string;
+  shift: string;
+  minJobTiming: string;
+  maxJobTiming: string;
+
+  // Interview & Communication
+  interviewAddress: string;
+  candidateCanCall: boolean;
+  communicationWindow: string[];
+
+  // Assets & Deposit
+  depositRequired: string;
+  assetsRequired: SelectOption[];
+
+  // Description
+  description: string | null;
+}
+
 const RecruiterJob = () => {
-  const [categories, setCategories] = useState([]);
-  const [jobTitles, setJobTitles] = useState([]);
-  const [cities, setCities] = useState([]);
-  const [localities, setLocalities] = useState([]);
-  const [benefits, setBenefits] = useState([]);
-  const [skills, setSkills] = useState([]);
-  const [documents, setDocuments] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // Validation Schema - FIXED VERSION
+  const validationSchema = yup.object({
+    // Basic Information
+    jobTitle: yup
+      .object({
+        value: yup.number().required('Job Title is required'),
+        label: yup.string().required()
+      })
+      .nullable()
+      .required('Job Title is required'),
+    
+    category: yup
+      .object({
+        value: yup.number().required('Job Category is required'),
+        label: yup.string().required()
+      })
+      .nullable()
+      .required('Job Category is required'),
+    
+    openings: yup
+      .string()
+      .required('Number of Openings is required')
+      .test('is-number', 'Must be a valid number', (value) => !isNaN(parseInt(value)))
+      .test('min-value', 'Openings must be at least 1', (value) => {
+        const num = parseInt(value);
+        return !isNaN(num) && num >= 1;
+      }),
+    
+    jobType: yup.string().required('Job type is required'),
+    isContractJob: yup.boolean().default(false),
+    workLocation: yup.string().required('Work location is required'),
 
-  const fetchAllData = async () => {
+    // Location & Demographics
+    city: yup
+      .object({
+        value: yup.number().required('City is required'),
+        label: yup.string().required()
+      })
+      .nullable()
+      .required('City is required'),
+    
+    locality: yup
+      .object({
+        value: yup.number().required('Locality is required'),
+        label: yup.string().required()
+      })
+      .nullable()
+      .required('Locality is required'),
+    
+    gender: yup.string().required('Gender is required'),
+    qualification: yup.string().required('Qualification is required'),
+
+    // Experience & Salary
+    minExperience: yup
+      .string()
+      .test('experience-required', 'Minimum experience is required', function(value) {
+        const onlyFresher = this.parent.onlyFresher;
+        if (onlyFresher) return true;
+        return !!(value && value.trim() !== '');
+      })
+      .test('is-number', 'Must be a valid number', function(value) {
+        const onlyFresher = this.parent.onlyFresher;
+        if (onlyFresher) return true;
+        if (!value || value.trim() === '') return true;
+        return !isNaN(parseFloat(value));
+      }),
+    
+    maxExperience: yup
+      .string()
+      .test('experience-required', 'Maximum experience is required', function(value) {
+        const onlyFresher = this.parent.onlyFresher;
+        if (onlyFresher) return true;
+        return !!(value && value.trim() !== '');
+      })
+      .test('is-number', 'Must be a valid number', function(value) {
+        const onlyFresher = this.parent.onlyFresher;
+        if (onlyFresher) return true;
+        if (!value || value.trim() === '') return true;
+        return !isNaN(parseFloat(value));
+      })
+      .test('experience-range', 'Minimum experience cannot be greater than maximum experience', function(value) {
+        const { minExperience, onlyFresher } = this.parent;
+        if (onlyFresher) return true;
+        if (!minExperience || !value || minExperience.trim() === '' || value.trim() === '') return true;
+        
+        const minExp = parseFloat(minExperience);
+        const maxExp = parseFloat(value);
+        
+        if (isNaN(minExp) || isNaN(maxExp)) return true;
+        return minExp <= maxExp;
+      }),
+    
+    onlyFresher: yup.boolean().default(false),
+    
+    salaryBenefits: yup.string().required('Salary benefits is required'),
+    
+    salaryMin: yup
+      .string()
+      .required('Minimum salary is required')
+      .test('is-number', 'Must be a valid number', (value) => !isNaN(parseFloat(value)))
+      .test('min-value', 'Salary must be positive', (value) => {
+        const num = parseFloat(value);
+        return !isNaN(num) && num >= 0;
+      }),
+    
+    salaryMax: yup
+      .string()
+      .required('Maximum salary is required')
+      .test('is-number', 'Must be a valid number', (value) => !isNaN(parseFloat(value)))
+      .test('min-value', 'Salary must be positive', (value) => {
+        const num = parseFloat(value);
+        return !isNaN(num) && num >= 0;
+      })
+      .test('salary-range', 'Minimum salary cannot be greater than maximum salary', function(value) {
+        const { salaryMin } = this.parent;
+        if (!salaryMin || !value) return true;
+        
+        const minSalary = parseFloat(salaryMin);
+        const maxSalary = parseFloat(value);
+        
+        if (isNaN(minSalary) || isNaN(maxSalary)) return true;
+        return minSalary <= maxSalary;
+      }),
+
+    // Job Details
+    benefits: yup.array().of(
+      yup.object({
+        value: yup.number().required(),
+        label: yup.string().required()
+      })
+    ).default([]),
+    
+    skills: yup.array().of(
+      yup.object({
+        value: yup.number().required(),
+        label: yup.string().required()
+      })
+    ).default([]),
+    
+    documents: yup.array().of(
+      yup.object({
+        value: yup.number().required(),
+        label: yup.string().required()
+      })
+    ).default([]),
+    
+    workingDays: yup.string().required('Working days is required'),
+    shift: yup.string().required('Shift is required'),
+    
+    minJobTiming: yup
+      .string()
+      .required('Start time is required')
+      .test('is-number', 'Must be a valid number', (value) => !isNaN(parseFloat(value)))
+      .test('valid-time', 'Time must be between 0 and 24', (value) => {
+        const time = parseFloat(value);
+        return !isNaN(time) && time >= 0 && time <= 24;
+      }),
+    
+    maxJobTiming: yup
+      .string()
+      .required('End time is required')
+      .test('is-number', 'Must be a valid number', (value) => !isNaN(parseFloat(value)))
+      .test('valid-time', 'Time must be between 0 and 24', (value) => {
+        const time = parseFloat(value);
+        return !isNaN(time) && time >= 0 && time <= 24;
+      })
+      .test('timing-range', 'Start time must be less than end time', function(value) {
+        const { minJobTiming } = this.parent;
+        if (!minJobTiming || !value) return true;
+        
+        const startTime = parseFloat(minJobTiming);
+        const endTime = parseFloat(value);
+        
+        if (isNaN(startTime) || isNaN(endTime)) return true;
+        return startTime < endTime;
+      }),
+
+    // Interview & Communication
+    interviewAddress: yup
+      .string()
+      .required('Interview address is required')
+      .min(10, 'Address must be at least 10 characters'),
+    
+    candidateCanCall: yup.boolean().default(false),
+    communicationWindow: yup.array().of(yup.string()).default([]),
+
+    // Assets & Deposit
+    depositRequired: yup.string().required('Deposit information is required'),
+    assetsRequired: yup.array().of(
+      yup.object({
+        value: yup.number().required(),
+        label: yup.string().required()
+      })
+    ).default([]),
+
+    // Description
+    description: yup
+      .string()
+      .nullable()
+      .required('Job description is required')
+      .test('not-empty', 'Job description is required', (value:any) => {
+        return value && value.trim().length > 0;
+      }),
+  });
+
+  // Initialize form
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+    getValues,
+    watch,
+    reset,
+  } = useForm<FormValues>({
+    resolver: yupResolver(validationSchema),
+    defaultValues: {
+      jobTitle: null,
+      category: null,
+      openings: '',
+      jobType: 'Full-time',
+      isContractJob: false,
+      workLocation: 'Work from office',
+      city: null,
+      locality: null,
+      gender: 'Any',
+      qualification: 'Any',
+      minExperience: '',
+      maxExperience: '',
+      onlyFresher: false,
+      salaryBenefits: 'Fixed',
+      salaryMin: '',
+      salaryMax: '',
+      benefits: [],
+      skills: [],
+      documents: [],
+      workingDays: '5 days working',
+      shift: 'Day',
+      minJobTiming: '',
+      maxJobTiming: '',
+      interviewAddress: '',
+      candidateCanCall: false,
+      communicationWindow: [],
+      depositRequired: 'No',
+      assetsRequired: [],
+      description: null,
+    },
+    mode: 'onBlur',
+  });
+
+  // Watch certain fields for conditional logic
+  const onlyFresher = useWatch({ control, name: 'onlyFresher' });
+  const candidateCanCall = useWatch({ control, name: 'candidateCanCall' });
+  const isContractJob = useWatch({ control, name: 'isContractJob' });
+  const workLocation = useWatch({ control, name: 'workLocation' });
+  const jobType = useWatch({ control, name: 'jobType' });
+  const salaryBenefits = useWatch({ control, name: 'salaryBenefits' });
+
+  // Handle fresher checkbox
+  useEffect(() => {
+    if (onlyFresher) {
+      setValue('minExperience', '0');
+      setValue('maxExperience', '0');
+    }
+  }, [onlyFresher, setValue]);
+
+  // Handle communication window checkbox
+  useEffect(() => {
+    if (candidateCanCall) {
+      setValue('communicationWindow', ['10:00-19:00']);
+    } else {
+      setValue('communicationWindow', []);
+    }
+  }, [candidateCanCall, setValue]);
+
+  // Handle form submission
+  const onSubmit = async (data: FormValues) => {
     setLoading(true);
+
     try {
-      const [
-        categoriesData,
-        jobTitlesData,
-        citiesData,
-        localitiesData,
-        benefitsData,
-        skillsData,
-        documentsData,
-      ] = await Promise.all([
-        masterCategoryService(""),
-        masterJobTitleService(""),
-        masterCityService(""),
-        masterLocalityService(""),
-        masterBenifitsService(""),
-        masterJobSKillsService(""),
-        masterDocumentsService(""),
-      ]);
+      // Format qualification according to database enum
+      const formatQualification = (qual: string): string => {
+        const map: Record<string, string> = {
+          'Any': 'Any',
+          '10th Pass': 'highschool',
+          '12th Pass': 'intermediate',
+          'Diploma': 'diploma',
+          'Graduate': 'graduate',
+          'Post Graduate': 'postgraduate'
+        };
+        return map[qual] || 'highschool';
+      };
 
-      setCategories(categoriesData?.data?.items ?? []);
-      setJobTitles(jobTitlesData?.data?.items ?? []);
-      setCities(citiesData?.data?.items ?? []);
-      setLocalities(localitiesData?.data?.items ?? []);
-      setBenefits(benefitsData?.data?.items ?? []);
-      setSkills(skillsData?.data?.items ?? []);
-      setDocuments(documentsData?.data?.items ?? []);
+      // Determine job type based on contract job checkbox
+      let finalJobType = data.jobType;
+      if (data.isContractJob) {
+        finalJobType = 'Contract';
+      }
 
-     
-    } catch (err) {
-      console.error("Error fetching data:", err);
+      // Format work location
+      const formatWorkLocation = (location: string): string => {
+        const map: Record<string, string> = {
+          'Work from office': 'Office',
+          'Field job': 'Field',
+          'Work from home': 'WorkFromHome'
+        };
+        return map[location] || 'Office';
+      };
+
+      // Format working days
+      const formatWorkingDays = (days: string): string => {
+        const map: Record<string, string> = {
+          '5 days working': '5',
+          '6 days working': '6',
+          'other': 'other'
+        };
+        return map[days] || '5';
+      };
+
+      const formData = {
+        // Required fields from database
+        recruiterId: 1, // This should come from auth/session
+        titleId: data.jobTitle?.value,
+        categoryId: data.category?.value,
+        cityId: data.city?.value,
+        localityId: data.locality?.value,
+        
+        // Other required fields with defaults
+        hiringForOthers: 0,
+        openings: parseInt(data.openings),
+        agencyId: null,
+        
+        // Job type and location
+        jobType: finalJobType,
+        workLocation: formatWorkLocation(data.workLocation),
+        
+        // Demographics
+        gender: data.gender,
+        qualification: formatQualification(data.qualification),
+        
+        // Experience (converted to decimal for database)
+        minExerince: data.onlyFresher ? 0 : parseFloat(data.minExperience),
+        maxExperince: data.onlyFresher ? 0 : parseFloat(data.maxExperience),
+        onlyFresher: data.onlyFresher ? 1 : 0,
+        
+        // Salary (converted to decimal)
+        salaryBenifits: data.salaryBenefits,
+        salaryMin: parseFloat(data.salaryMin),
+        salaryMax: parseFloat(data.salaryMax),
+        
+        // Working days and shift
+        workingDays: formatWorkingDays(data.workingDays),
+        shift: data.shift,
+        
+        // Job timings (converted to decimal)
+        minJobTiming: parseFloat(data.minJobTiming),
+        maxJobTiming: parseFloat(data.maxJobTiming),
+        
+        // Deposit and verification
+        depositeRequired: data.depositRequired === 'Yes' ? 1 : 0,
+        verificationRequired: 0,
+        
+        // Interview and communication
+        interviewAddress: data.interviewAddress,
+        communicationWindow: data.communicationWindow,
+        candidateCanCall: data.candidateCanCall ? 1 : 0,
+        
+        // Job posting type
+        jobPostingFor: 'INDIVIDUAL',
+        
+        // Description and status
+        description: data.description,
+        status: 'DRAFT',
+        adminComments: null,
+        
+        // Audit fields
+        createdBy: 1,
+        updatedBy: 1,
+        
+        // Arrays for related tables
+        jobSkillsIds: data.skills.map(skill => skill.value),
+        assetsIds: data.assetsRequired.map(asset => asset.value),
+        documetnsIds: data.documents.map(doc => doc.value),
+        jobBenitsIds: data.benefits.map(benefit => benefit.value)
+      };
+
+      console.log('Form data prepared for API:', formData); 
+
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('An error occurred while posting the job');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchAllData();
-  }, []);
+  const [loading, setLoading] = useState(false);
 
-   console.log({
-        categories,
-        jobTitles,
-        cities,
-        localities,
-        benefits,
-        skills,
-        documents,
-      });
   return (
     <div className='jobposting'>
       {loading && <Loader />}
       <div className='container'>
         <div className='row'>
           <div className='col-md-12'>
-            <form>
+            <form onSubmit={handleSubmit((data:any)=>onSubmit(data))} noValidate>
               <div className='formsection'>
+
+                {/* Job Basic Information */}
                 <div className='row'>
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Job Title<span className='redastric'>*</span></label>
-                      <select className="form-select" aria-label="Default select example">
-                        <option value="" disabled>Select job title</option>
-                         {categories?.map((item:any)=>{  
-                          return(<>
-                          <option value={item?.id}>{item?.name}</option>
-                          </>)
-
-                         })}
-                      </select>
+                      <Controller
+                        name="jobTitle"
+                        control={control}
+                        render={({ field }) => (
+                          <ServerSearchSelect
+                            placeholder="Search job title"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            fetchOptions={(input: any, config: any) =>
+                              masterJobTitleService(input, config)
+                            }
+                          />
+                        )}
+                      />
+                      {errors.jobTitle && <div className="text-danger small">{errors.jobTitle.message}</div>}
                     </div>
                   </div>
 
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Job Category<span className='redastric'>*</span></label>
-                      <select className="form-select" aria-label="Default select example">
-                        <option value="" disabled>Select job title</option>
-                         {jobTitles?.map((item:any)=>{  
-                          return(<>
-                          <option value={item?.id}>{item?.name}</option>
-                          </>)  
-                         })}
-                      </select>
+                      <Controller
+                        name="category"
+                        control={control}
+                        render={({ field }) => (
+                          <ServerSearchSelect
+                            placeholder="Search job Category"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            fetchOptions={(input: any, config: any) =>
+                              masterCategoryService(input, config)
+                            }
+                          />
+                        )}
+                      />
+                      {errors.category && <div className="text-danger small">{errors.category.message}</div>}
                     </div>
                   </div>
 
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Number of Openings<span className='redastric'>*</span></label>
-                      <input type="email" className="form-control" id="exampleFormControlInput1" placeholder="e.g. 1" />
+                      <Controller
+                        name="openings"
+                        control={control}
+                        render={({ field }) => (
+                          <input
+                            type="number"
+                            className={`form-control ${errors.openings ? 'is-invalid' : ''}`}
+                            placeholder="e.g. 1"
+                            value={field.value}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              // Ensure non-negative
+                              if (parseInt(value) < 1 && value !== '') return;
+                              field.onChange(value);
+                            }}
+                            onBlur={field.onBlur}
+                            min="1"
+                          />
+                        )}
+                      />
+                      {errors.openings && <div className="text-danger small">{errors.openings.message}</div>}
                     </div>
                   </div>
-
-
                 </div>
 
+                {/* Job Type & Location */}
                 <div className='row'>
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Job Type<span className='redastric'>*</span></label>
                       <div className="d-grid gap-2 d-md-flex roundbtn">
-                        <button className="btn btn-primary selected" type="button">Full Time</button>
-                        <button className="btn btn-primary" type="button">Part Time</button>
+                        <Controller
+                          name="jobType"
+                          control={control}
+                          render={({ field }) => (
+                            <>
+                              <button
+                                className={`btn ${field.value === 'Full-time' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Full-time')}
+                              >
+                                Full Time
+                              </button>
+                              <button
+                                className={`btn ${field.value === 'Part-time' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Part-time')}
+                              >
+                                Part Time
+                              </button>
+                            </>
+                          )}
+                        />
                       </div>
                       <div className="mb-3 form-check">
-                        <input type="checkbox" className="form-check-input" id="exampleCheck1" />
-                        <label className="form-check-label">It is a Contract Job </label>
+                        <Controller
+                          name="isContractJob"
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={field.value}
+                              onChange={(e) => {
+                                field.onChange(e.target.checked);
+                                // If contract job is checked, set job type to Contract
+                                if (e.target.checked) {
+                                  setValue('jobType', 'Contract', { shouldValidate: true });
+                                } else {
+                                  setValue('jobType', 'Full-time', { shouldValidate: true });
+                                }
+                              }}
+                              onBlur={field.onBlur}
+                            />
+                          )}
+                        />
+                        <label className="form-check-label">It is a Contract Job</label>
                       </div>
-
                     </div>
                   </div>
+
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Work Location Type<span className='redastric'>*</span></label>
                       <div className="d-grid gap-2 d-md-flex roundbtn">
-                        <button className="btn btn-primary selected" type="button">Work from office</button>
-                        <button className="btn btn-primary" type="button">Field job</button>
-                        <button className="btn btn-primary" type="button">Work from home</button>
+                        <Controller
+                          name="workLocation"
+                          control={control}
+                          render={({ field }) => (
+                            <>
+                              <button
+                                className={`btn ${field.value === 'Work from office' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Work from office')}
+                              >
+                                Work from office
+                              </button>
+                              <button
+                                className={`btn ${field.value === 'Field job' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Field job')}
+                              >
+                                Field job
+                              </button>
+                              <button
+                                className={`btn ${field.value === 'Work from home' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Work from home')}
+                              >
+                                Work from home
+                              </button>
+                            </>
+                          )}
+                        />
                       </div>
                     </div>
                   </div>
+
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Choose City<span className='redastric'>*</span></label>
-                      <select className="form-select" aria-label="Default select example">
-                        <option value="" disabled>Select city</option>
-                        <option value="1">Lucknow</option>
-                        <option value="2">Barabanki</option>
-                        <option value="3">Gonda</option>
-                      </select>
+                      <Controller
+                        name="city"
+                        control={control}
+                        render={({ field }) => (
+                          <ServerSearchSelect
+                            placeholder="Search City"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            fetchOptions={(input: any, config: any) =>
+                              masterCityService(input, config)
+                            }
+                          />
+                        )}
+                      />
+                      {errors.city && <div className="text-danger small">{errors.city.message}</div>}
                     </div>
                   </div>
-
                 </div>
 
+                {/* Location & Demographics */}
                 <div className='row'>
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Job Locality<span className='redastric'>*</span></label>
-                      <select className="form-select" aria-label="Default select example">
-                        <option value="" disabled>Select locality</option>
-                        <option value="1">Lucknow</option>
-                        <option value="2">Barabanki</option>
-                        <option value="3">Gonda</option>
-                      </select>
+                      <Controller
+                        name="locality"
+                        control={control}
+                        render={({ field }) => (
+                          <ServerSearchSelect
+                            placeholder="Search Locality"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            fetchOptions={(input: any, config: any) =>
+                              masterLocalityService(input, config)
+                            }
+                          />
+                        )}
+                      />
+                      {errors.locality && <div className="text-danger small">{errors.locality.message}</div>}
                     </div>
                   </div>
 
@@ -176,9 +696,35 @@ const RecruiterJob = () => {
                     <div className="mb-3">
                       <label className="form-label">Gender<span className='redastric'>*</span></label>
                       <div className="d-grid gap-2 d-md-flex roundbtn">
-                        <button className="btn btn-primary selected" type="button">Any</button>
-                        <button className="btn btn-primary" type="button">Male</button>
-                        <button className="btn btn-primary" type="button">Female</button>
+                        <Controller
+                          name="gender"
+                          control={control}
+                          render={({ field }) => (
+                            <>
+                              <button
+                                className={`btn ${field.value === 'Any' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Any')}
+                              >
+                                Any
+                              </button>
+                              <button
+                                className={`btn ${field.value === 'Male' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Male')}
+                              >
+                                Male
+                              </button>
+                              <button
+                                className={`btn ${field.value === 'Female' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Female')}
+                              >
+                                Female
+                              </button>
+                            </>
+                          )}
+                        />
                       </div>
                     </div>
                   </div>
@@ -187,42 +733,130 @@ const RecruiterJob = () => {
                     <div className="mb-3">
                       <label className="form-label">Minimum Qualification Required<span className='redastric'>*</span></label>
                       <div className="d-grid gap-2 d-md-flex roundbtn">
-                        <button className="btn btn-primary" type="button">Any</button>
-                        <button className="btn btn-primary" type="button">10th Pass</button>
-                        <button className="btn btn-primary" type="button">12th Pass</button>
-                        <button className="btn btn-primary" type="button">Diploma</button>
-                        <button className="btn btn-primary" type="button">Graduate</button>
-                        <button className="btn btn-primary" type="button">Post Graduate</button>
+                        <Controller
+                          name="qualification"
+                          control={control}
+                          render={({ field }) => (
+                            <>
+                              <button
+                                className={`btn ${field.value === 'Any' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Any')}
+                              >
+                                Any
+                              </button>
+                              <button
+                                className={`btn ${field.value === '10th Pass' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('10th Pass')}
+                              >
+                                10th Pass
+                              </button>
+                              <button
+                                className={`btn ${field.value === '12th Pass' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('12th Pass')}
+                              >
+                                12th Pass
+                              </button>
+                              <button
+                                className={`btn ${field.value === 'Diploma' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Diploma')}
+                              >
+                                Diploma
+                              </button>
+                              <button
+                                className={`btn ${field.value === 'Graduate' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Graduate')}
+                              >
+                                Graduate
+                              </button>
+                              <button
+                                className={`btn ${field.value === 'Post Graduate' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Post Graduate')}
+                              >
+                                Post Graduate
+                              </button>
+                            </>
+                          )}
+                        />
                       </div>
                     </div>
                   </div>
-
                 </div>
 
+                {/* Experience & Salary */}
                 <div className='row'>
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Required Experience<span className='redastric'>*</span></label>
                       <div className="mutipleSelctBox">
-                        <select className="form-select" aria-label="Default select example">
-                          <option value="" disabled>Min Exp.</option>
-                          <option value="1">Lucknow</option>
-                          <option value="2">Barabanki</option>
-                          <option value="3">Gonda</option>
-                        </select>
+                        <Controller
+                          name="minExperience"
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              type="number"
+                              className={`form-control ${errors.minExperience ? 'is-invalid' : ''}`}
+                              placeholder="Min (years)"
+                              value={field.value}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Ensure non-negative
+                                if (parseFloat(value) < 0 && value !== '') return;
+                                field.onChange(value);
+                              }}
+                              onBlur={field.onBlur}
+                              min="0"
+                              step="0.5"
+                              disabled={onlyFresher}
+                            />
+                          )}
+                        />
                         <span className='toSeprate'>To</span>
-                        <select className="form-select" aria-label="Default select example">
-                          <option value="" disabled>Max Exp.</option>
-                          <option value="1">Lucknow</option>
-                          <option value="2">Barabanki</option>
-                          <option value="3">Gonda</option>
-                        </select>
+                        <Controller
+                          name="maxExperience"
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              type="number"
+                              className={`form-control ${errors.maxExperience ? 'is-invalid' : ''}`}
+                              placeholder="Max (years)"
+                              value={field.value}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Ensure non-negative
+                                if (parseFloat(value) < 0 && value !== '') return;
+                                field.onChange(value);
+                              }}
+                              onBlur={field.onBlur}
+                              min="0"
+                              step="0.5"
+                              disabled={onlyFresher}
+                            />
+                          )}
+                        />
                       </div>
-                      <div className="mb-3 form-check">
-                        <input type="checkbox" className="form-check-input" id="exampleCheck1" />
-                        <label className="form-check-label">It is a Contract Job </label>
+                      <div className="form-check mt-2">
+                        <Controller
+                          name="onlyFresher"
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={field.value}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+                        <label className="form-check-label">Only Freshers (0 experience)</label>
                       </div>
-
+                      {errors.minExperience && <div className="text-danger small">{errors.minExperience.message}</div>}
+                      {errors.maxExperience && <div className="text-danger small">{errors.maxExperience.message}</div>}
                     </div>
                   </div>
 
@@ -230,8 +864,28 @@ const RecruiterJob = () => {
                     <div className="mb-3">
                       <label className="form-label">Salary & benefits<span className='redastric'>*</span></label>
                       <div className="d-grid gap-2 d-md-flex roundbtn">
-                        <button className="btn btn-primary" type="button">Fixed</button>
-                        <button className="btn btn-primary" type="button">Fixed + Incentives</button>
+                        <Controller
+                          name="salaryBenefits"
+                          control={control}
+                          render={({ field }) => (
+                            <>
+                              <button
+                                className={`btn ${field.value === 'Fixed' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Fixed')}
+                              >
+                                Fixed
+                              </button>
+                              <button
+                                className={`btn ${field.value === 'Fixed + Incentives' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Fixed + Incentives')}
+                              >
+                                Fixed + Incentives
+                              </button>
+                            </>
+                          )}
+                        />
                       </div>
                     </div>
                   </div>
@@ -240,70 +894,187 @@ const RecruiterJob = () => {
                     <div className="mb-3">
                       <label className="form-label">Salary details/ monthly<span className='redastric'>*</span></label>
                       <div className="mutipleSelctBox">
-                        <input type="email" className="form-control" id="exampleFormControlInput1" placeholder="e.g. 1" />
+                        <Controller
+                          name="salaryMin"
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              type="number"
+                              className={`form-control ${errors.salaryMin ? 'is-invalid' : ''}`}
+                              placeholder="Min (₹)"
+                              value={field.value}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Ensure non-negative
+                                if (parseFloat(value) < 0 && value !== '') return;
+                                field.onChange(value);
+                              }}
+                              onBlur={field.onBlur}
+                              min="0"
+                              step="100"
+                            />
+                          )}
+                        />
                         <span className='toSeprate'>To</span>
-                        <input type="email" className="form-control" id="exampleFormControlInput1" placeholder="e.g. 1" />
+                        <Controller
+                          name="salaryMax"
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              type="number"
+                              className={`form-control ${errors.salaryMax ? 'is-invalid' : ''}`}
+                              placeholder="Max (₹)"
+                              value={field.value}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Ensure non-negative
+                                if (parseFloat(value) < 0 && value !== '') return;
+                                field.onChange(value);
+                              }}
+                              onBlur={field.onBlur}
+                              min="0"
+                              step="100"
+                            />
+                          )}
+                        />
                       </div>
+                      {errors.salaryMin && <div className="text-danger small">{errors.salaryMin.message}</div>}
+                      {errors.salaryMax && <div className="text-danger small">{errors.salaryMax.message}</div>}
+                      {errors.salaryMax?.type === 'salary-range' && (
+                        <div className="text-danger small">{errors.salaryMax.message}</div>
+                      )}
                     </div>
                   </div>
-
-
                 </div>
 
+                {/* Skills & Benefits */}
                 <div className='row'>
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Job Benefits (optional)</label>
-                      <div className="d-grid gap-2 d-md-flex roundbtn">
-                        <button className="btn btn-primary active" type="button">Car <IoCheckmark /></button>
-                        <button className="btn btn-primary" type="button">Meal <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Insurance <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">PF <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Medical Benefits <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Add More <GoPlus /></button>
-                      </div>
+                      <Controller
+                        name="benefits"
+                        control={control}
+                        render={({ field }) => (
+                          <MultiSelectWithServerSearch
+                            placeholder="Search Job Benefits"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            fetchOptions={(input:any, config:any) =>
+                              masterBenifitsService(input, config)
+                            }
+                            isMulti
+                          />
+                        )}
+                      />
                     </div>
                   </div>
 
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Job Skills (optional)</label>
-                      <div className="d-grid gap-2 d-md-flex roundbtn">
-                        <button className="btn btn-primary active" type="button">3D Modelling <IoCheckmark /></button>
-                        <button className="btn btn-primary" type="button">AutoCad <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Interior Design <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">PhotoShop <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Revit <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Site Survey <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">SketchUp <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Add more <GoPlus /></button>
-                      </div>
+                      <Controller
+                        name="skills"
+                        control={control}
+                        render={({ field }) => (
+                          <MultiSelectWithServerSearch
+                            placeholder="Search Skills"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            fetchOptions={(input:any, config:any) =>
+                              masterJobSKillsService(input, config)
+                            }
+                            isMulti
+                          />
+                        )}
+                      />
                     </div>
                   </div>
 
                   <div className='col-md-4'>
                     <div className="mb-3">
-                      <label className="form-label">Job Skills (optional)</label>
-                      <div className="d-grid gap-2 d-md-flex roundbtn">
-                        <button className="btn btn-primary active" type="button">ITI <IoCheckmark /></button>
-                        <button className="btn btn-primary" type="button">PAN Card <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Aadhar Card <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Bank Account <GoPlus /></button>
-                      </div>
+                      <label className="form-label">Documents Required (optional)</label>
+                      <Controller
+                        name="documents"
+                        control={control}
+                        render={({ field }) => (
+                          <MultiSelectWithServerSearch
+                            placeholder="Search Documents Required"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            fetchOptions={(input:any, config:any) =>
+                              masterDocumentsService(input, config)
+                            }
+                            isMulti
+                          />
+                        )}
+                      />
                     </div>
                   </div>
-
                 </div>
 
+                {/* Timings & Working Days */}
                 <div className='row'>
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Job Timings<span className='redastric'>*</span></label>
                       <div className="mutipleSelctBox">
-                        <input type="text" className="form-control" id="exampleFormControlInput1" placeholder="" />
+                        <Controller
+                          name="minJobTiming"
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              type="number"
+                              className={`form-control ${errors.minJobTiming ? 'is-invalid' : ''}`}
+                              placeholder="Start time (e.g., 9)"
+                              value={field.value}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                const num = parseFloat(value);
+                                // Validate range
+                                if ((num < 0 || num > 24) && value !== '') return;
+                                field.onChange(value);
+                              }}
+                              onBlur={field.onBlur}
+                              min="0"
+                              max="24"
+                              step="0.5"
+                            />
+                          )}
+                        />
                         <span className='toSeprate'>To</span>
-                        <input type="text" className="form-control" id="exampleFormControlInput1" placeholder="" />
+                        <Controller
+                          name="maxJobTiming"
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              type="number"
+                              className={`form-control ${errors.maxJobTiming ? 'is-invalid' : ''}`}
+                              placeholder="End time (e.g., 18)"
+                              value={field.value}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                const num = parseFloat(value);
+                                // Validate range
+                                if ((num < 0 || num > 24) && value !== '') return;
+                                field.onChange(value);
+                              }}
+                              onBlur={field.onBlur}
+                              min="0"
+                              max="24"
+                              step="0.5"
+                            />
+                          )}
+                        />
                       </div>
+                      {errors.minJobTiming && <div className="text-danger small">{errors.minJobTiming.message}</div>}
+                      {errors.maxJobTiming && <div className="text-danger small">{errors.maxJobTiming.message}</div>}
+                      {errors.maxJobTiming?.type === 'timing-range' && (
+                        <div className="text-danger small">{errors.maxJobTiming.message}</div>
+                      )}
                     </div>
                   </div>
 
@@ -311,46 +1082,208 @@ const RecruiterJob = () => {
                     <div className="mb-3">
                       <label className="form-label">Working Days<span className='redastric'>*</span></label>
                       <div className="d-grid gap-2 d-md-flex roundbtn">
-                        <button className="btn btn-primary active" type="button">5 days working <IoCheckmark /></button>
-                        <button className="btn btn-primary" type="button">6 days working <GoPlus /></button>
+                        <Controller
+                          name="workingDays"
+                          control={control}
+                          render={({ field }) => (
+                            <>
+                              <button
+                                className={`btn ${field.value === '5 days working' ? 'btn-primary active' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('5 days working')}
+                              >
+                                5 days working <IoCheckmark />
+                              </button>
+                              <button
+                                className={`btn ${field.value === '6 days working' ? 'btn-primary active' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('6 days working')}
+                              >
+                                6 days working <GoPlus />
+                              </button>
+                            </>
+                          )}
+                        />
                       </div>
                     </div>
                   </div>
 
                   <div className='col-md-4'>
                     <div className="mb-3">
-                      <label className="form-label">Full Interview Address<span className='redastric'>*</span></label>
-                      <input type="text" className="form-control" id="exampleFormControlInput1" placeholder="" />
+                      <label className="form-label">Shift<span className='redastric'>*</span></label>
+                      <div className="d-grid gap-2 d-md-flex roundbtn">
+                        <Controller
+                          name="shift"
+                          control={control}
+                          render={({ field }) => (
+                            <>
+                              <button
+                                className={`btn ${field.value === 'Day' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Day')}
+                              >
+                                Day
+                              </button>
+                              <button
+                                className={`btn ${field.value === 'Night' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Night')}
+                              >
+                                Night
+                              </button>
+                              <button
+                                className={`btn ${field.value === 'Any' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Any')}
+                              >
+                                Any
+                              </button>
+                            </>
+                          )}
+                        />
+                      </div>
                     </div>
                   </div>
-
                 </div>
 
-                <div className='row'>
-                  <div className='col-md-12'>
-                    <div className="mb-3 form-check">
-                      <input className="form-check-input" id="exampleCheck1" type="checkbox" />
-                      <label className="form-check-label">Allow candidates to call between 10:00 am - 07:00 pm on 7275458171 <span className='blueedit'>(Edit)</span> </label>
-                    </div>
-                  </div>
-                </div>
-
+                {/* Interview Details */}
                 <div className='row'>
                   <div className='col-md-12'>
                     <div className="mb-3">
-                      <label className="form-label">Is candidate required to make any deposit (e.g. uniform charges, delivery bag, etc)?<span className='redastric'>*</span></label>
+                      <label className="form-label">Full Interview Address<span className='redastric'>*</span></label>
+                      <Controller
+                        name="interviewAddress"
+                        control={control}
+                        render={({ field }) => (
+                          <input
+                            type="text"
+                            className={`form-control ${errors.interviewAddress ? 'is-invalid' : ''}`}
+                            placeholder="Enter complete interview address"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                          />
+                        )}
+                      />
+                      {errors.interviewAddress && <div className="text-danger small">{errors.interviewAddress.message}</div>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Communication Preferences */}
+                <div className='row'>
+                  <div className='col-md-12'>
+                    <div className="mb-3 form-check">
+                      <Controller
+                        name="candidateCanCall"
+                        control={control}
+                        render={({ field }) => (
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                          />
+                        )}
+                      />
+                      <label className="form-check-label">
+                        Allow candidates to call between 10:00 am - 07:00 pm on 7275458171
+                        <span className='blueedit'> (Edit)</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Deposit & Assets */}
+                <div className='row'>
+                  <div className='col-md-12'>
+                    <div className="mb-3">
+                      <label className="form-label">
+                        Is candidate required to make any deposit (e.g. uniform charges, delivery bag, etc)?
+                        <span className='redastric'>*</span>
+                      </label>
                       <div className="d-grid gap-2 d-md-flex roundbtn">
-                        <button className="btn btn-primary active" type="button">Yes</button>
-                        <button className="btn btn-primary" type="button">No</button>
+                        <Controller
+                          name="depositRequired"
+                          control={control}
+                          render={({ field }) => (
+                            <>
+                              <button
+                                className={`btn ${field.value === 'Yes' ? 'btn-primary active' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Yes')}
+                              >
+                                Yes
+                              </button>
+                              <button
+                                className={`btn ${field.value === 'No' ? 'btn-primary active' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('No')}
+                              >
+                                No
+                              </button>
+                            </>
+                          )}
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className='row'>
+                  <div className='col-md-4'>
+                    <div className="mb-3">
+                      <label className="form-label">Assets Required (optional)</label>
+                      <Controller
+                        name="assetsRequired"
+                        control={control}
+                        render={({ field }) => (
+                          <MultiSelectWithServerSearch
+                            placeholder="Search Assets Required"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            fetchOptions={(input:any, config:any) =>
+                              masterAssetsRequiredService(input, config)
+                            }
+                            isMulti
+                          />
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Job Description */}
+                <div className="row">
+                  <div className="col-md-12 mb-5">
+                    <label className="form-label">Job Description<span className='redastric'>*</span></label>
+                    <Controller
+                      name="description"
+                      control={control}
+                      render={({ field }) => (
+                        <RichTextEditor
+                          description={field.value}
+                          setDescription={field.onChange}
+                          onBlur={field.onBlur}
+                        />
+                      )}
+                    />
+                    {errors.description && <div className="text-danger small">{errors.description.message}</div>}
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className='row'>
                   <div className='col-md-12'>
                     <div className='submitBtn'>
-                      <button type="button" className="btn btn-primary">Post this job</button>
+                      <button 
+                        type="submit" 
+                        className="btn btn-primary"
+                        disabled={isSubmitting || loading}
+                      >
+                        {isSubmitting || loading ? 'Posting...' : 'Post this job'}
+                      </button>
                     </div>
                   </div>
                 </div>

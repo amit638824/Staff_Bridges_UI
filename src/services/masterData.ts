@@ -1,50 +1,34 @@
 import axiosInstance from "@/services/index";
 
-export const masterCategoryService = async (name: string) => {
-    let url = `?page=1&limit=30`;
-    if (name) url += `&name=${name}`;
-    const res = await axiosInstance.get(`/api/master-category${url}`);
-    return res.data;
+type FetchConfig = {
+    signal?: AbortSignal;
 };
 
-export const masterJobTitleService = async (name: any) => {
-    let url = `?page=1&limit=30`;
-    if (name) url += `&name=${name}`;
-    const res = await axiosInstance.get(`/api/master-job-title${url}`);
-    return res.data;
+const createMasterService = (endpoint: string) => {
+    return async (name: string = "", config?: FetchConfig) => {
+        let url = `?page=1&limit=30`;
+        if (name) url += `&name=${name}`;
+
+        const res = await axiosInstance.get(endpoint + url, {
+            signal: config?.signal,
+        });
+ 
+        return res.data;
+    };
 };
 
-export const masterCityService = async (name: any) => {
-    let url = `?page=1&limit=30`;
-    if (name) url += `&name=${name}`;
-    const res = await axiosInstance.get(`/api/master-city${url}`);
-    return res.data;
-};
+export const masterCategoryService = createMasterService("/api/master-category");
 
-export const masterLocalityService = async (name: any) => {
-    let url = `?page=1&limit=30`;
-    if (name) url += `&name=${name}`;
-    const res = await axiosInstance.get(`/api/master-locality${url}`);
-    return res.data;
-};
+export const masterJobTitleService = createMasterService("/api/master-job-title");
 
-export const masterBenifitsService = async (name: any) => {
-    let url = `?page=1&limit=30`;
-    if (name) url += `&name=${name}`;
-    const res = await axiosInstance.get(`/api/master-job-benifits${url}`);
-    return res.data;
-};
+export const masterCityService = createMasterService("/api/master-city");
 
-export const masterJobSKillsService = async (name: any) => {
-    let url = `?page=1&limit=30`;
-    if (name) url += `&name=${name}`;
-    const res = await axiosInstance.get(`/api/master-skills${url}`);
-    return res.data;
-};
+export const masterLocalityService = createMasterService("/api/master-locality");
 
-export const masterDocumentsService = async (name: any) => {
-    let url = `?page=1&limit=30`;
-    if (name) url += `&name=${name}`;
-    const res = await axiosInstance.get(`/api/master-recruiter-document${url}`);
-    return res.data;
-};
+export const masterBenifitsService = createMasterService("/api/master-job-benifits");
+
+export const masterJobSKillsService = createMasterService("/api/master-skills");
+
+export const masterDocumentsService = createMasterService("/api/master-recruiter-document");
+export const masterAssetsRequiredService = createMasterService("/api/master-assets-required");
+
