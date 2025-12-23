@@ -286,7 +286,7 @@ const RecruiterJob = () => {
     watch,
     reset,
   } = useForm<FormValues>({
-    resolver: yupResolver(validationSchema),
+    resolver: yupResolver(validationSchema)  as any,
     defaultValues: {
       jobTitle: null,
       category: null,
