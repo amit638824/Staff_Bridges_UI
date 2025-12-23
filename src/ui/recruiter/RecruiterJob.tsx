@@ -11,8 +11,12 @@ import {
   masterBenifitsService,
   masterJobSKillsService,
   masterDocumentsService,
+  masterAssetsRequiredService
 } from "@/services/masterData";
 import ServerSearchSelect from '@/components/Common/SearchableSelect';
+import MultiSelectWithServerSearch from '@/components/Common/MultiSelectWithServerSearch';
+import RichTextEditor from '@/components/Common/RichTextEditors';
+
 const RecruiterJob = () => {
 
   const [jobTitle, setJobTitle] = useState(null);
@@ -23,8 +27,11 @@ const RecruiterJob = () => {
   const [benefits, setBenefits] = useState([]);
   const [skills, setSkills] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [assetsRequired, setAssetsRequired] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  const [description, setDescription] = useState(null)
+  console.log(description);
+  
   return (
     <div className='jobposting'>
       {loading && <Loader />}
@@ -163,7 +170,7 @@ const RecruiterJob = () => {
                         <input type="text" className="form-control" id="exampleFormControlInput1" placeholder="e.g. 1" />
                         <span className='toSeprate'>To</span>
                         <input type="text" className="form-control" id="exampleFormControlInput1" placeholder="e.g. 1" />
-                      </div> 
+                      </div>
 
                     </div>
                   </div>
@@ -196,45 +203,50 @@ const RecruiterJob = () => {
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Job Benefits (optional)</label>
-                      <div className="d-grid gap-2 d-md-flex roundbtn">
-                        <button className="btn btn-primary active" type="button">Car <IoCheckmark /></button>
-                        <button className="btn btn-primary" type="button">Meal <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Insurance <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">PF <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Medical Benefits <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Add More <GoPlus /></button>
-                      </div>
+                      <MultiSelectWithServerSearch
+                        placeholder="Search Job Benefits"
+                        value={benefits}
+                        onChange={setBenefits}
+                        fetchOptions={(input, config) =>
+                          masterBenifitsService(input, config)
+                        }
+                        isMulti
+                      />
+
                     </div>
                   </div>
 
                   <div className='col-md-4'>
                     <div className="mb-3">
                       <label className="form-label">Job Skills (optional)</label>
-                      <div className="d-grid gap-2 d-md-flex roundbtn">
-                        <button className="btn btn-primary active" type="button">3D Modelling <IoCheckmark /></button>
-                        <button className="btn btn-primary" type="button">AutoCad <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Interior Design <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">PhotoShop <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Revit <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Site Survey <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">SketchUp <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Add more <GoPlus /></button>
-                      </div>
+                      <MultiSelectWithServerSearch
+                        placeholder="Search Skills"
+                        value={skills}
+                        onChange={setSkills}
+                        fetchOptions={(input, config) =>
+                          masterJobSKillsService(input, config)
+                        }
+                        isMulti
+                      />
+
                     </div>
                   </div>
 
                   <div className='col-md-4'>
                     <div className="mb-3">
-                      <label className="form-label">Job Skills (optional)</label>
-                      <div className="d-grid gap-2 d-md-flex roundbtn">
-                        <button className="btn btn-primary active" type="button">ITI <IoCheckmark /></button>
-                        <button className="btn btn-primary" type="button">PAN Card <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Aadhar Card <GoPlus /></button>
-                        <button className="btn btn-primary" type="button">Bank Account <GoPlus /></button>
-                      </div>
+                      <label className="form-label">Documents Required(optional)</label>
+                      <MultiSelectWithServerSearch
+                        placeholder="Search Documents Required"
+                        value={documents}
+                        onChange={setDocuments}
+                        fetchOptions={(input, config) =>
+                          masterDocumentsService(input, config)
+                        }
+                        isMulti
+                      />
+
                     </div>
                   </div>
-
                 </div>
 
                 <div className='row'>
@@ -288,7 +300,28 @@ const RecruiterJob = () => {
                     </div>
                   </div>
                 </div>
+                <div className='row'>
+                  <div className='col-md-4'>
+                    <div className="mb-3">
+                      <label className="form-label">Assets Required(optional)</label>
+                      <MultiSelectWithServerSearch
+                        placeholder="Search Assets Required"
+                        value={assetsRequired}
+                        onChange={setAssetsRequired}
+                        fetchOptions={(input, config) =>
+                          masterAssetsRequiredService(input, config)
+                        }
+                        isMulti
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-12 mb-5">
+                     <RichTextEditor description={description} setDescription={setDescription} />
 
+                  </div>
+                </div>
                 <div className='row'>
                   <div className='col-md-12'>
                     <div className='submitBtn'>

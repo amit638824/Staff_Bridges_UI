@@ -12,28 +12,23 @@ const createMasterService = (endpoint: string) => {
         const res = await axiosInstance.get(endpoint + url, {
             signal: config?.signal,
         });
-
+ 
         return res.data;
     };
 };
 
-export const masterCategoryService =
-    createMasterService("/api/master-category");
+export const masterCategoryService = createMasterService("/api/master-category");
 
-export const masterJobTitleService =
-    createMasterService("/api/master-job-title");
+export const masterJobTitleService = createMasterService("/api/master-job-title");
 
-export const masterCityService =
-    createMasterService("/api/master-city");
+export const masterCityService = createMasterService("/api/master-city");
 
-export const masterLocalityService =
-    createMasterService("/api/master-locality");
+export const masterLocalityService = createMasterService("/api/master-locality");
 
-export const masterBenifitsService =
-    createMasterService("/api/master-job-benifits");
+export const masterBenifitsService = createMasterService("/api/master-job-benifits");
 
-export const masterJobSKillsService =
-    createMasterService("/api/master-skills");
+export const masterJobSKillsService = createMasterService("/api/master-skills");
 
-export const masterDocumentsService =
-    createMasterService("/api/master-recruiter-document");
+export const masterDocumentsService = createMasterService("/api/master-recruiter-document");
+export const masterAssetsRequiredService = createMasterService("/api/master-assets-required");
+
