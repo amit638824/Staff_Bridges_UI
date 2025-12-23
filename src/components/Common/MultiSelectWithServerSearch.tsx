@@ -3,38 +3,18 @@
 import React, { useRef } from 'react';
 import AsyncSelect from 'react-select/async';
 
-type OptionType = {
-  label: string;
-  value: string | number;
-  original: any;
-};
-
-type FetchConfig = {
-  signal?: AbortSignal;
-};
-
-type Props = {
-  placeholder?: string;
-  value: OptionType | OptionType[] | null;
-  onChange: (value: any) => void;
-  fetchOptions: (search: string, config?: FetchConfig) => Promise<any>;
-  getOptionLabel?: (item: any) => string;
-  getOptionValue?: (item: any) => string | number;
-  isMulti?: boolean;
-};
-
-const MultiSelectWithServerSearch: React.FC<Props> = ({
+const MultiSelectWithServerSearch: React.FC<any> = ({
   placeholder = 'Search...',
   value,
   onChange,
   fetchOptions,
-  getOptionLabel = (item) => item.name,
-  getOptionValue = (item) => item.id,
+  getOptionLabel = (item: any) => item.name,
+  getOptionValue = (item: any) => item.id,
   isMulti = false,
 }) => {
-  const abortRef = useRef<AbortController | null>(null);
+  const abortRef = useRef<any>(null);
 
-  const loadOptions = async (inputValue: string): Promise<OptionType[]> => {
+  const loadOptions = async (inputValue: string): Promise<any[]> => {
     // cancel previous request
     if (abortRef.current) {
       abortRef.current.abort();
