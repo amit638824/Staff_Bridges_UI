@@ -4,13 +4,13 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
 export default function RichTextEditor({ description, setDescription }: any) {
   return (
-    <div style={{ height: '200px' }}> {/* container height fixed */}
+    <div> {/* container height fixed */}
       <CKEditor
         editor={ClassicEditor as any}
         data={description || "Enter Your Description"}
         onReady={editor => { 
           // Force editor editable area to take full container height
-          editor.ui.view.editable.element.style.height = '200px';
+          //editor.ui.view.editable.element.style.height = '200px';
         }}
         onChange={(event: any, editor: any) => {
           const data = editor.getData();

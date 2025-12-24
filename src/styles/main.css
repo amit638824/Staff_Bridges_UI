@@ -84,3 +84,38 @@ body{
 	width: 22px !important;
 	height: 22px !important;
 }
+/* Job List Card Styling */
+.jobposting .formsection {
+  background: #ffffff;
+  border: 1px solid #e6ebf1;     /* light border */
+  border-radius: 8px;           /* rounded corners */
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); /* subtle shadow */
+}
+
+/* Footer divider (line before call info) */
+.jobposting .formsection .text-muted.small {
+  border-top: 1px solid #eef1f6;
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+/* Status badge spacing */
+.jobposting .badge {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* Review & Contact buttons */
+.jobposting .btn-outline-primary {
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 14px;
+}
+
+/* View candidates button */
+.jobposting .btn-primary {
+  border-radius: 20px;
+}

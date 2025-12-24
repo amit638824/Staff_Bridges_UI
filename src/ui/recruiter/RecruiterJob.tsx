@@ -16,9 +16,13 @@ import {
   masterDocumentsService,
   masterAssetsRequiredService
 } from "@/services/masterData";
+import { JobPostService } from "@/services/RecruiterService";
 import ServerSearchSelect from '@/components/Common/SearchableSelect';
 import MultiSelectWithServerSearch from '@/components/Common/MultiSelectWithServerSearch';
 import RichTextEditor from '@/components/Common/RichTextEditors';
+import { showAlert } from "@/utils/swalFire";
+import { generateJobDescription } from "@/services/jobDescriptionTemplate";
+import { useRouter } from "next/navigation";
 
 interface SelectOption {
   value: number;
@@ -458,6 +462,12 @@ const RecruiterJob = () => {
       };
 
       console.log('Form data prepared for API:', formData); 
+      const response = await JobPostService(formData);
+      if (!response?.success) {
+        return showAlert("error", response?.message, "Failed");
+      }
+      showAlert("success", response?.message, "Success");
+      router.replace("/recruiter/job/list");
 
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -468,6 +478,8 @@ const RecruiterJob = () => {
   };
 
   const [loading, setLoading] = useState(false);
+  const [suggestedTemplate, setSuggestedTemplate] = useState<string>("");
+  const router = useRouter();
 
   return (
     <div className='jobposting'>
@@ -1254,6 +1266,54 @@ const RecruiterJob = () => {
                   </div>
                 </div>
 
+                {/* Generate Suggested Template */}
+                  <div className="mb-3 text-end">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => {
+                        const values = getValues();
+                        console.log("FORM VALUES USED:", values); // 👈 debug once
+                        const template = generateJobDescription(values);
+                        setSuggestedTemplate(template);
+                      }}
+                    >
+                      Generate Suggested Template
+                    </button>
+                  </div>
+
+                {/* Suggested Template textarea */}
+                  {suggestedTemplate && (
+                    <div className="mb-4">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <label className="form-label mb-0">Suggested Template</label>
+
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-primary"
+                          onClick={() => {
+                            setValue("description", suggestedTemplate, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
+                            setSuggestedTemplate("");
+                          }}
+                        >
+                          Apply
+                        </button>
+                      </div>
+
+                    <div
+                      className="form-control"
+                      style={{
+                        minHeight: "220px",
+                        overflowY: "auto",
+                        backgroundColor: "#f8f9fa",
+                      }}
+                      dangerouslySetInnerHTML={{ __html: suggestedTemplate }}
+                    />
+                  </div>
+                )}
                 {/* Job Description */}
                 <div className="row">
                   <div className="col-md-12 mb-5">
