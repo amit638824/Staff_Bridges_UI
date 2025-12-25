@@ -35,3 +35,4 @@ export const recruiterJobBenefitsServices = async (id: any) => {
   return res.data;
 };
 
+// recruiterDocumentServices  recruiterAssestServices recruiterSkillsServices recruiterJobBenefitsServices

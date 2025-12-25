@@ -77,14 +77,13 @@ interface FormValues {
 
 const RecruiterJob = () => {
   const user = useUser();
-  const [jobData, setJobData] = useState({})
+  const [jobData, setJobData] = useState<any>(null)
   useEffect(() => {
     const data: any = localStorage.getItem('jobUpdate')
     const jobUpdate: any = JSON.parse(data)
     setJobData(jobUpdate)
+
   }, [])
-  console.log(jobData,"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-  
   const validationSchema = yup.object({
     // Basic Information
     jobTitle: yup
@@ -303,7 +302,7 @@ const RecruiterJob = () => {
     defaultValues: {
       jobTitle: null,
       category: null,
-      openings: '',
+      openings: jobData?.openings,
       jobType: 'Full-time',
       isContractJob: false,
       workLocation: 'Work from office',
@@ -1260,8 +1259,8 @@ const RecruiterJob = () => {
                         control={control}
                         render={({ field }) => (
                           <MultiSelectWithServerSearch
-                          
-                          placeholder="Search Assets Required"
+
+                            placeholder="Search Assets Required"
                             value={field.value}
                             onChange={field.onChange}
                             onBlur={field.onBlur}
