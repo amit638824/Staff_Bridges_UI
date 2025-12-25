@@ -5,7 +5,7 @@ import SideBar from "./SideBar";
 import TopBar from "./TopBar";
 import { useSession } from "@/hooks/useSession";
 import { useRouter, usePathname } from "next/navigation";
-import "./recruiter.css"
+import "./recruiter.css";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
@@ -14,13 +14,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // 🔴 Not logged in → login page
-    if (!session?.isLoggedIn) {
+    if (!session) return;
+
+    // Not logged in
+    if (!session.isLoggedIn) {
       router.replace("/");
       return;
     }
 
-    // 🔒 Logged in but trying to escape layout
     const role = session.user?.roletbl_roleName;
 
     const ROLE_HOME: Record<string, string> = {
@@ -33,13 +34,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     const home = ROLE_HOME[role];
 
-    // ❌ URL manually changed → force back
-    if (home && !pathname.startsWith(home)) {
+    //  IMPORTANT: avoid double navigation
+    if (home && pathname.startsWith(home)) return;
+
+    if (home) {
       router.replace(home);
     }
-  }, [session, pathname, router]);
+  }, [session?.isLoggedIn]); // ❌ pathname removed
 
-  // ⏳ Session loading protection
   if (!session) return null;
 
   return (
@@ -48,9 +50,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       <div className="flex-grow-1 d-flex flex-column">
         <TopBar />
-        <div className="p-4 flex-grow-1 overflow-auto">
-          {children}
-        </div>
+        <div className="p-4 flex-grow-1 overflow-auto">{children}</div>
       </div>
     </div>
   );

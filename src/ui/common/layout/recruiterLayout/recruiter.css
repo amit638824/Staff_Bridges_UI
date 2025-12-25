@@ -176,3 +176,7 @@
 	align-items: center;
 	gap: 20px;
 }
+
+.cursor-pointer{
+	cursor: pointer !important;
+}

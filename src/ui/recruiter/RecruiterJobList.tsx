@@ -1,9 +1,18 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { FaTrashAlt } from "react-icons/fa";
+import { FaEdit } from "react-icons/fa";
+import InfiniteScroll from "react-infinite-scroll-component";
+
 import Loader from "@/ui/common/loader/Loader";
-import { getRecruiterJobList } from "@/services/RecruiterService";
+import {
+  getRecruiterJobList,
+  deleteJobPstedServices,
+} from "@/services/RecruiterService";
+import { showAlert, showConfirmAlert } from "@/utils/swalFire";
+import { useRouter } from "next/navigation";
 
 interface JobItem {
   job_id: number;
@@ -17,63 +26,129 @@ interface JobItem {
   created_at: string;
 }
 
+const LIMIT = 10;
+
 const RecruiterJobList = () => {
   const [jobs, setJobs] = useState<JobItem[]>([]);
-  const [loading, setLoading] = useState(false);
-
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter()
+  const fetchJobs = useCallback(
+    async (currentPage: number, isInitial = false) => {
+      try {
+        setLoading(true);
 
-  useEffect(() => {
-    fetchJobs(page);
-  }, [page]);
+        const res = await getRecruiterJobList(currentPage, LIMIT);
 
-  const fetchJobs = async (currentPage: number) => {
-    try {
-      setLoading(true);
-      const res = await getRecruiterJobList(currentPage, limit);
+        if (res?.success) {
+          const newJobs: JobItem[] = res?.data?.items || [];
+          const totalPages = res?.data?.totalPages || 1;
 
-      if (res?.success) {
-        setJobs(res.data.items || []);
-        setTotalPages(res.data.totalPages || 1);
+          setJobs((prev) => {
+            if (isInitial) return newJobs;
+            const existingIds = new Set(prev.map((j) => j.job_id));
+            const uniqueNewJobs = newJobs.filter(
+              (j) => !existingIds.has(j.job_id)
+            );
+            return [...prev, ...uniqueNewJobs];
+          });
+          setHasMore(currentPage < totalPages);
+        }
+      } catch (error) {
+        console.error("Job fetch error", error);
+        setHasMore(false);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching job list", error);
-    } finally {
-      setLoading(false);
-    }
+    },
+    []
+  );
+  useEffect(() => {
+    setPage(1);
+    fetchJobs(1, true);
+  }, [fetchJobs]);
+
+  const fetchMoreData = () => {
+    if (!hasMore) return;
+
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchJobs(nextPage);
   };
 
+  const handleDelete = async (id: number) => {
+    const confirmed = await showConfirmAlert({
+      title: "Delete Job?",
+      text: "This action cannot be undone",
+      confirmText: "Yes, delete",
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const res = await deleteJobPstedServices(id);
+
+      if (res?.success && res?.code === 200) {
+        showAlert("success", res.message || "Deleted successfully");
+        setJobs((prev) => prev.filter((job) => job.job_id !== id));
+      } else {
+        showAlert("error", res?.message || "Delete failed");
+      }
+    } catch (error: any) {
+      showAlert("error", error?.message || "Server error");
+    }
+  };
+  const handleJobedit = (jobUpdate: any) => {
+    router.push(`/recruiter/job/update`);
+    localStorage.setItem("jobUpdate", JSON.stringify(jobUpdate))
+  }
   return (
     <div className="jobposting">
-      {loading && <Loader />}
-
       <div className="container">
         <div className="row">
           <div className="col-md-12">
 
-            {/* Header */}
+            {/* HEADER */}
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h4 className="mb-0">Jobs</h4>
-
               <Link href="/recruiter/job">
-                <button className="btn btn-primary">
-                  Post a Job
-                </button>
+                <button className="btn btn-primary">Post a Job</button>
               </Link>
             </div>
 
-            {/* Job List */}
-            {jobs.map((job) => (
-              <div key={job.job_id} className="formsection mb-4">
-                <div className="row">
-                  <div className="col-md-12">
-
-                    {/* Title Row */}
-                    <div className="d-flex justify-content-between align-items-start">
+            {/* SCROLL CONTAINER */}
+            <div
+              id="jobScroll"
+              style={{ height: "75vh", overflow: "auto" }}
+            >
+              <InfiniteScroll
+                dataLength={jobs.length}
+                next={fetchMoreData}
+                hasMore={hasMore}
+                loader={
+                  <div className="text-center my-3">
+                    <Loader />
+                  </div>
+                }
+                endMessage={
+                  jobs.length > 0 && (
+                    <p className="text-center text-muted my-4">
+                      No more jobs to load
+                    </p>
+                  )
+                }
+                scrollableTarget="jobScroll"
+              >
+                {/* JOB LIST */}
+                {jobs.map((job) => (
+                  <div
+                    key={`${job.job_id}-${job.created_at}`}
+                    className="formsection mb-4"
+                  >
+                    <div className="d-flex justify-content-between">
                       <div>
-                        <h5 className="mb-1">
+                        <h5>
                           {job.job_title_name}
                           <span className="badge bg-warning text-dark ms-2">
                             {job.status}
@@ -81,95 +156,56 @@ const RecruiterJobList = () => {
                         </h5>
 
                         <p className="text-muted small mb-2">
-                          {job.locality_name}, {job.city_name} &nbsp; | &nbsp;
-                          ₹{Number(job.salary_min).toLocaleString()} - ₹
-                          {Number(job.salary_max).toLocaleString()} &nbsp; | &nbsp;
+                          {job.locality_name}, {job.city_name} | ₹
+                          {Number(job.salary_min).toLocaleString()} - ₹
+                          {Number(job.salary_max).toLocaleString()} |{" "}
                           {job.openings} opening
                         </p>
                       </div>
 
-                      <span className="text-muted small">
+                      <div className="text-muted small">
                         {new Date(job.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    {/* CTA */}
-                    <div className="d-flex align-items-center mt-3">
-                      <button className="btn btn-outline-primary me-2">
-                        0 To Review
-                      </button>
-
-                      <button className="btn btn-outline-primary me-2">
-                        0 Contacted
-                      </button>
-
-                      <div className="ms-auto">
-                        <button className="btn btn-primary">
-                          View All Candidates
-                        </button>
+                        <span
+                          className="ms-2 text-danger cursor-pointer"
+                          onClick={() => handleDelete(job.job_id)}
+                        >
+                          <FaTrashAlt />
+                        </span>
+                        <span
+                          className="ms-2 text-warning  cursor-pointer"
+                          onClick={() => handleJobedit(job)}
+                        >
+                          <FaEdit />
+                        </span>
                       </div>
                     </div>
 
-                    {/* Footer info */}
-                    <div className="mt-3 text-muted small">
-                      👉 We will call you in the next 4 hours (10 a.m. – 6:30 p.m.)
+                    <div className="d-flex mt-3">
+                      <button className="btn btn-outline-primary me-2">
+                        0 To Review
+                      </button>
+                      <button className="btn btn-outline-primary me-2">
+                        0 Contacted
+                      </button>
+                      <button className="btn btn-primary ms-auto">
+                        View All Candidates
+                      </button>
                     </div>
 
+                    <div className="mt-3 text-muted small">
+                      We will call you in the next 4 hours (10 a.m. – 6:30 p.m.)
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                ))}
 
-            {/* Empty State */}
-            {!loading && jobs.length === 0 && (
-              <div className="text-center text-muted mt-5">
-                No jobs posted yet.
-              </div>
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <nav className="mt-4">
-                <ul className="pagination justify-content-center">
-
-                  <li className={`page-item ${page === 1 ? "disabled" : ""}`}>
-                    <button
-                      className="page-link"
-                      onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                    >
-                      Previous
-                    </button>
-                  </li>
-
-                  {Array.from({ length: totalPages }).map((_, index) => {
-                    const pageNumber = index + 1;
-                    return (
-                      <li
-                        key={pageNumber}
-                        className={`page-item ${page === pageNumber ? "active" : ""}`}
-                      >
-                        <button
-                          className="page-link"
-                          onClick={() => setPage(pageNumber)}
-                        >
-                          {pageNumber}
-                        </button>
-                      </li>
-                    );
-                  })}
-
-                  <li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
-                    <button
-                      className="page-link"
-                      onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                    >
-                      Next
-                    </button>
-                  </li>
-
-                </ul>
-              </nav>
-            )}
+                {/* EMPTY STATE */}
+                {!loading && jobs.length === 0 && (
+                  <p className="text-center text-muted mt-5">
+                    No jobs posted yet
+                  </p>
+                )}
+              </InfiniteScroll>
+            </div>
 
           </div>
         </div>
