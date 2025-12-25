@@ -1272,8 +1272,7 @@ const RecruiterJob = () => {
                       type="button"
                       className="btn btn-sm btn-outline-primary"
                       onClick={() => {
-                        const values = getValues();
-                        console.log("FORM VALUES USED:", values); // 👈 debug once
+                        const values = getValues(); 
                         const template = generateJobDescription(values);
                         setSuggestedTemplate(template);
                       }}

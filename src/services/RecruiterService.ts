@@ -13,3 +13,8 @@ export const getRecruiterJobList = async (page = 1, limit = 10) => {
   return res.data;
 };
 
+export const deleteJobPstedServices = async (id:any) => {
+  const res = await axiosInstance.delete(`/api/recruiter-jobpost-delete/${id}`);
+  return res.data;
+};
+

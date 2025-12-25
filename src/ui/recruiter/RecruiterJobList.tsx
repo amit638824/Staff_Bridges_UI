@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { FaTrashAlt } from "react-icons/fa";
 import Loader from "@/ui/common/loader/Loader";
-import { getRecruiterJobList } from "@/services/RecruiterService";
+import { getRecruiterJobList, deleteJobPstedServices } from "@/services/RecruiterService";
+import { showAlert, showConfirmAlert } from "@/utils/swalFire";
 
 interface JobItem {
   job_id: number;
@@ -43,6 +45,24 @@ const RecruiterJobList = () => {
     } finally {
       setLoading(false);
     }
+  }; const handleDelete = async (id: any) => {
+    const confirmed = await showConfirmAlert({
+      title: "Delete Job?", 
+      confirmText: "Yes, delete",
+    });
+
+    if (!confirmed) return;
+    try {
+      const res = await deleteJobPstedServices(id);
+      if (res?.success && res?.code === 200) {
+        showAlert("success", res.message || "Deleted successfully");
+        fetchJobs(page);
+      }
+      else
+        showAlert("error", res?.message || "Something went wrong while deleting");
+    } catch (error: any) {
+      showAlert("error", error?.message || "Server error, please try again");
+    }
   };
 
   return (
@@ -65,60 +85,63 @@ const RecruiterJobList = () => {
             </div>
 
             {/* Job List */}
-            {jobs.map((job) => (
-              <div key={job.job_id} className="formsection mb-4">
-                <div className="row">
-                  <div className="col-md-12">
+            {jobs.map((job) => {  
+              return (
+                <div key={job.job_id} className="formsection mb-4">
+                  <div className="row">
+                    <div className="col-md-12">
 
-                    {/* Title Row */}
-                    <div className="d-flex justify-content-between align-items-start">
-                      <div>
-                        <h5 className="mb-1">
-                          {job.job_title_name}
-                          <span className="badge bg-warning text-dark ms-2">
-                            {job.status}
-                          </span>
-                        </h5>
+                      {/* Title Row */}
+                      <div className="d-flex justify-content-between align-items-start">
+                        <div>
+                          <h5 className="mb-1">
+                            {job.job_title_name}
+                            <span className="badge bg-warning text-dark ms-2">
+                              {job.status}
+                            </span>
+                          </h5>
 
-                        <p className="text-muted small mb-2">
-                          {job.locality_name}, {job.city_name} &nbsp; | &nbsp;
-                          ₹{Number(job.salary_min).toLocaleString()} - ₹
-                          {Number(job.salary_max).toLocaleString()} &nbsp; | &nbsp;
-                          {job.openings} opening
-                        </p>
+                          <p className="text-muted small mb-2">
+                            {job.locality_name}, {job.city_name} &nbsp; | &nbsp;
+                            ₹{Number(job.salary_min).toLocaleString()} - ₹
+                            {Number(job.salary_max).toLocaleString()} &nbsp; | &nbsp;
+                            {job.openings} opening
+                          </p>
+                        </div>
+
+                        <span className="text-muted small">
+                          {new Date(job.created_at).toLocaleDateString()}
+                          <span className="ms-1 text-danger fs-6 cursor-pointer">  <FaTrashAlt onClick={() => handleDelete(job?.job_id)} /> </span>
+                        </span>
                       </div>
 
-                      <span className="text-muted small">
-                        {new Date(job.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    {/* CTA */}
-                    <div className="d-flex align-items-center mt-3">
-                      <button className="btn btn-outline-primary me-2">
-                        0 To Review
-                      </button>
-
-                      <button className="btn btn-outline-primary me-2">
-                        0 Contacted
-                      </button>
-
-                      <div className="ms-auto">
-                        <button className="btn btn-primary">
-                          View All Candidates
+                      {/* CTA */}
+                      <div className="d-flex align-items-center mt-3">
+                        <button className="btn btn-outline-primary me-2">
+                          0 To Review
                         </button>
+
+                        <button className="btn btn-outline-primary me-2">
+                          0 Contacted
+                        </button>
+
+                        <div className="ms-auto">
+                          <button className="btn btn-primary">
+                            View All Candidates
+                          </button>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Footer info */}
-                    <div className="mt-3 text-muted small">
-                      👉 We will call you in the next 4 hours (10 a.m. – 6:30 p.m.)
-                    </div>
+                      {/* Footer info */}
+                      <div className="mt-3 text-muted small">
+                        We will call you in the next 4 hours (10 a.m. – 6:30 p.m.)
+                      </div>
 
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
 
             {/* Empty State */}
             {!loading && jobs.length === 0 && (
