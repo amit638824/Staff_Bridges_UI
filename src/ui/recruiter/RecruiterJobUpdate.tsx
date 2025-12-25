@@ -76,8 +76,15 @@ interface FormValues {
 }
 
 const RecruiterJob = () => {
- const user=useUser();  
- 
+  const user = useUser();
+  const [jobData, setJobData] = useState({})
+  useEffect(() => {
+    const data: any = localStorage.getItem('jobUpdate')
+    const jobUpdate: any = JSON.parse(data)
+    setJobData(jobUpdate)
+  }, [])
+  console.log(jobData,"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+  
   const validationSchema = yup.object({
     // Basic Information
     jobTitle: yup
@@ -87,7 +94,7 @@ const RecruiterJob = () => {
       })
       .nullable()
       .required('Job Title is required'),
-    
+
     category: yup
       .object({
         value: yup.number().required('Job Category is required'),
@@ -95,7 +102,7 @@ const RecruiterJob = () => {
       })
       .nullable()
       .required('Job Category is required'),
-    
+
     openings: yup
       .string()
       .required('Number of Openings is required')
@@ -104,7 +111,7 @@ const RecruiterJob = () => {
         const num = parseInt(value);
         return !isNaN(num) && num >= 1;
       }),
-    
+
     jobType: yup.string().required('Job type is required'),
     isContractJob: yup.boolean().default(false),
     workLocation: yup.string().required('Work location is required'),
@@ -117,7 +124,7 @@ const RecruiterJob = () => {
       })
       .nullable()
       .required('City is required'),
-    
+
     locality: yup
       .object({
         value: yup.number().required('Locality is required'),
@@ -125,54 +132,54 @@ const RecruiterJob = () => {
       })
       .nullable()
       .required('Locality is required'),
-    
+
     gender: yup.string().required('Gender is required'),
     qualification: yup.string().required('Qualification is required'),
 
     // Experience & Salary
     minExperience: yup
       .string()
-      .test('experience-required', 'Minimum experience is required', function(value) {
+      .test('experience-required', 'Minimum experience is required', function (value) {
         const onlyFresher = this.parent.onlyFresher;
         if (onlyFresher) return true;
         return !!(value && value.trim() !== '');
       })
-      .test('is-number', 'Must be a valid number', function(value) {
+      .test('is-number', 'Must be a valid number', function (value) {
         const onlyFresher = this.parent.onlyFresher;
         if (onlyFresher) return true;
         if (!value || value.trim() === '') return true;
         return !isNaN(parseFloat(value));
       }),
-    
+
     maxExperience: yup
       .string()
-      .test('experience-required', 'Maximum experience is required', function(value) {
+      .test('experience-required', 'Maximum experience is required', function (value) {
         const onlyFresher = this.parent.onlyFresher;
         if (onlyFresher) return true;
         return !!(value && value.trim() !== '');
       })
-      .test('is-number', 'Must be a valid number', function(value) {
+      .test('is-number', 'Must be a valid number', function (value) {
         const onlyFresher = this.parent.onlyFresher;
         if (onlyFresher) return true;
         if (!value || value.trim() === '') return true;
         return !isNaN(parseFloat(value));
       })
-      .test('experience-range', 'Minimum experience cannot be greater than maximum experience', function(value) {
+      .test('experience-range', 'Minimum experience cannot be greater than maximum experience', function (value) {
         const { minExperience, onlyFresher } = this.parent;
         if (onlyFresher) return true;
         if (!minExperience || !value || minExperience.trim() === '' || value.trim() === '') return true;
-        
+
         const minExp = parseFloat(minExperience);
         const maxExp = parseFloat(value);
-        
+
         if (isNaN(minExp) || isNaN(maxExp)) return true;
         return minExp <= maxExp;
       }),
-    
+
     onlyFresher: yup.boolean().default(false),
-    
+
     salaryBenefits: yup.string().required('Salary benefits is required'),
-    
+
     salaryMin: yup
       .string()
       .required('Minimum salary is required')
@@ -181,7 +188,7 @@ const RecruiterJob = () => {
         const num = parseFloat(value);
         return !isNaN(num) && num >= 0;
       }),
-    
+
     salaryMax: yup
       .string()
       .required('Maximum salary is required')
@@ -190,13 +197,13 @@ const RecruiterJob = () => {
         const num = parseFloat(value);
         return !isNaN(num) && num >= 0;
       })
-      .test('salary-range', 'Minimum salary cannot be greater than maximum salary', function(value) {
+      .test('salary-range', 'Minimum salary cannot be greater than maximum salary', function (value) {
         const { salaryMin } = this.parent;
         if (!salaryMin || !value) return true;
-        
+
         const minSalary = parseFloat(salaryMin);
         const maxSalary = parseFloat(value);
-        
+
         if (isNaN(minSalary) || isNaN(maxSalary)) return true;
         return minSalary <= maxSalary;
       }),
@@ -208,24 +215,24 @@ const RecruiterJob = () => {
         label: yup.string().required()
       })
     ).default([]),
-    
+
     skills: yup.array().of(
       yup.object({
         value: yup.number().required(),
         label: yup.string().required()
       })
     ).default([]),
-    
+
     documents: yup.array().of(
       yup.object({
         value: yup.number().required(),
         label: yup.string().required()
       })
     ).default([]),
-    
+
     workingDays: yup.string().required('Working days is required'),
     shift: yup.string().required('Shift is required'),
-    
+
     minJobTiming: yup
       .string()
       .required('Start time is required')
@@ -234,7 +241,7 @@ const RecruiterJob = () => {
         const time = parseFloat(value);
         return !isNaN(time) && time >= 0 && time <= 24;
       }),
-    
+
     maxJobTiming: yup
       .string()
       .required('End time is required')
@@ -243,13 +250,13 @@ const RecruiterJob = () => {
         const time = parseFloat(value);
         return !isNaN(time) && time >= 0 && time <= 24;
       })
-      .test('timing-range', 'Start time must be less than end time', function(value) {
+      .test('timing-range', 'Start time must be less than end time', function (value) {
         const { minJobTiming } = this.parent;
         if (!minJobTiming || !value) return true;
-        
+
         const startTime = parseFloat(minJobTiming);
         const endTime = parseFloat(value);
-        
+
         if (isNaN(startTime) || isNaN(endTime)) return true;
         return startTime < endTime;
       }),
@@ -259,7 +266,7 @@ const RecruiterJob = () => {
       .string()
       .required('Interview address is required')
       .min(10, 'Address must be at least 10 characters'),
-    
+
     candidateCanCall: yup.boolean().default(false),
     communicationWindow: yup.array().of(yup.string()).default([]),
 
@@ -277,7 +284,7 @@ const RecruiterJob = () => {
       .string()
       .nullable()
       .required('Job description is required')
-      .test('not-empty', 'Job description is required', (value:any) => {
+      .test('not-empty', 'Job description is required', (value: any) => {
         return value && value.trim().length > 0;
       }),
   });
@@ -292,7 +299,7 @@ const RecruiterJob = () => {
     watch,
     reset,
   } = useForm<FormValues>({
-    resolver: yupResolver(validationSchema)  as any,
+    resolver: yupResolver(validationSchema) as any,
     defaultValues: {
       jobTitle: null,
       category: null,
@@ -335,7 +342,7 @@ const RecruiterJob = () => {
   const workLocation = useWatch({ control, name: 'workLocation' });
   const jobType = useWatch({ control, name: 'jobType' });
   const salaryBenefits = useWatch({ control, name: 'salaryBenefits' });
- 
+
 
   // Handle fresher checkbox
   useEffect(() => {
@@ -405,65 +412,65 @@ const RecruiterJob = () => {
         categoryId: data.category?.value,
         cityId: data.city?.value,
         localityId: data.locality?.value,
-        
+
         // Other required fields with defaults
         hiringForOthers: 0,
         openings: parseInt(data.openings),
         agencyId: null,
-        
+
         // Job type and location
         jobType: finalJobType,
         workLocation: formatWorkLocation(data.workLocation),
-        
+
         // Demographics
         gender: data.gender,
         qualification: formatQualification(data.qualification),
-        
+
         // Experience (converted to decimal for database)
         minExerince: data.onlyFresher ? 0 : parseFloat(data.minExperience),
         maxExperince: data.onlyFresher ? 0 : parseFloat(data.maxExperience),
         onlyFresher: data.onlyFresher ? 1 : 0,
-        
+
         // Salary (converted to decimal)
         salaryBenifits: data.salaryBenefits,
         salaryMin: parseFloat(data.salaryMin),
         salaryMax: parseFloat(data.salaryMax),
-        
+
         // Working days and shift
         workingDays: formatWorkingDays(data.workingDays),
         shift: data.shift,
-        
+
         // Job timings (converted to decimal)
         minJobTiming: parseFloat(data.minJobTiming),
         maxJobTiming: parseFloat(data.maxJobTiming),
-        
+
         // Deposit and verification
         depositeRequired: data.depositRequired === 'Yes' ? 1 : 0,
         verificationRequired: 0,
-        
+
         // Interview and communication
         interviewAddress: data.interviewAddress,
         communicationWindow: data.communicationWindow,
         candidateCanCall: data.candidateCanCall ? 1 : 0,
-        
+
         // Job posting type
         jobPostingFor: 'INDIVIDUAL',
-        
+
         // Description and status
         description: data.description,
         status: 'DRAFT',
         adminComments: null,
-        
+
         // Audit fields
         createdBy: 1,
         updatedBy: 1,
-        
+
         // Arrays for related tables
         jobSkillsIds: data.skills.map(skill => skill.value),
         assetsIds: data.assetsRequired.map(asset => asset.value),
         documetnsIds: data.documents.map(doc => doc.value),
         jobBenitsIds: data.benefits.map(benefit => benefit.value)
-      }; 
+      };
       const response = await JobPostService(formData);
       if (!response?.success) {
         return showAlert("error", response?.message, "Failed");
@@ -489,7 +496,7 @@ const RecruiterJob = () => {
       <div className='container'>
         <div className='row'>
           <div className='col-md-12'>
-            <form onSubmit={handleSubmit((data:any)=>onSubmit(data))} noValidate>
+            <form onSubmit={handleSubmit((data: any) => onSubmit(data))} noValidate>
               <div className='formsection'>
 
                 {/* Job Basic Information */}
@@ -975,7 +982,7 @@ const RecruiterJob = () => {
                             value={field.value}
                             onChange={field.onChange}
                             onBlur={field.onBlur}
-                            fetchOptions={(input:any, config:any) =>
+                            fetchOptions={(input: any, config: any) =>
                               masterBenifitsService(input, config)
                             }
                             isMulti
@@ -997,7 +1004,7 @@ const RecruiterJob = () => {
                             value={field.value}
                             onChange={field.onChange}
                             onBlur={field.onBlur}
-                            fetchOptions={(input:any, config:any) =>
+                            fetchOptions={(input: any, config: any) =>
                               masterJobSKillsService(input, config)
                             }
                             isMulti
@@ -1019,7 +1026,7 @@ const RecruiterJob = () => {
                             value={field.value}
                             onChange={field.onChange}
                             onBlur={field.onBlur}
-                            fetchOptions={(input:any, config:any) =>
+                            fetchOptions={(input: any, config: any) =>
                               masterDocumentsService(input, config)
                             }
                             isMulti
@@ -1253,11 +1260,12 @@ const RecruiterJob = () => {
                         control={control}
                         render={({ field }) => (
                           <MultiSelectWithServerSearch
-                            placeholder="Search Assets Required"
+                          
+                          placeholder="Search Assets Required"
                             value={field.value}
                             onChange={field.onChange}
                             onBlur={field.onBlur}
-                            fetchOptions={(input:any, config:any) =>
+                            fetchOptions={(input: any, config: any) =>
                               masterAssetsRequiredService(input, config)
                             }
                             isMulti
@@ -1269,40 +1277,40 @@ const RecruiterJob = () => {
                 </div>
 
                 {/* Generate Suggested Template */}
-                  <div className="mb-3 text-end">
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => {
-                        const values = getValues(); 
-                        const template = generateJobDescription(values);
-                        setSuggestedTemplate(template);
-                      }}
-                    >
-                      Generate Suggested Template
-                    </button>
-                  </div>
+                <div className="mb-3 text-end">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => {
+                      const values = getValues();
+                      const template = generateJobDescription(values);
+                      setSuggestedTemplate(template);
+                    }}
+                  >
+                    Generate Suggested Template
+                  </button>
+                </div>
 
                 {/* Suggested Template textarea */}
-                  {suggestedTemplate && (
-                    <div className="mb-4">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <label className="form-label mb-0">Suggested Template</label>
+                {suggestedTemplate && (
+                  <div className="mb-4">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <label className="form-label mb-0">Suggested Template</label>
 
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-primary"
-                          onClick={() => {
-                            setValue("description", suggestedTemplate, {
-                              shouldValidate: true,
-                              shouldDirty: true,
-                            });
-                            setSuggestedTemplate("");
-                          }}
-                        >
-                          Apply
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-primary"
+                        onClick={() => {
+                          setValue("description", suggestedTemplate, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
+                          setSuggestedTemplate("");
+                        }}
+                      >
+                        Apply
+                      </button>
+                    </div>
 
                     <div
                       className="form-control"
@@ -1338,8 +1346,8 @@ const RecruiterJob = () => {
                 <div className='row'>
                   <div className='col-md-12'>
                     <div className='submitBtn'>
-                      <button 
-                        type="submit" 
+                      <button
+                        type="submit"
                         className="btn btn-primary"
                         disabled={isSubmitting || loading}
                       >
