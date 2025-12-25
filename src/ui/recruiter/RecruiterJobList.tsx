@@ -46,11 +46,7 @@ const RecruiterJobList = () => {
       setLoading(false);
     }
   }; const handleDelete = async (id: any) => {
-    const confirmed = await showConfirmAlert({
-      title: "Delete Job?", 
-      confirmText: "Yes, delete",
-    });
-
+    const confirmed = await showConfirmAlert({ title: "Delete Job?", confirmText: "Yes, delete", });
     if (!confirmed) return;
     try {
       const res = await deleteJobPstedServices(id);
@@ -85,7 +81,7 @@ const RecruiterJobList = () => {
             </div>
 
             {/* Job List */}
-            {jobs.map((job) => {  
+            {jobs.map((job) => {
               return (
                 <div key={job.job_id} className="formsection mb-4">
                   <div className="row">

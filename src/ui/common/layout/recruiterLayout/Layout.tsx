@@ -16,7 +16,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!session) return;
 
-    // 🔐 Not logged in
+    // Not logged in
     if (!session.isLoggedIn) {
       router.replace("/");
       return;
@@ -34,7 +34,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     const home = ROLE_HOME[role];
 
-    // 🚀 IMPORTANT: avoid double navigation
+    //  IMPORTANT: avoid double navigation
     if (home && pathname.startsWith(home)) return;
 
     if (home) {
