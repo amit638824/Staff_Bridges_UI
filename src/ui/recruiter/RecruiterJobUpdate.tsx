@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { GoPlus } from "react-icons/go";
 import { IoCheckmark } from "react-icons/io5";
 import { useForm, Controller, useWatch } from 'react-hook-form';
@@ -16,7 +16,17 @@ import {
   masterDocumentsService,
   masterAssetsRequiredService
 } from "@/services/masterData";
-import { JobPostService } from "@/services/RecruiterService";
+import {
+  JobPostService,
+  masterPrefillCategoryService,
+  masterPrefillCityService,
+  masterPrefillJobTitleService,
+  masterPrefillLocalityService,
+  masterPrefillAssetsRequiredService,
+  masterPrefillDocumentsService,
+  masterPrefillJobSkillsService,
+  masterPrefillBenifitsService
+} from "@/services/RecruiterService";
 import ServerSearchSelect from '@/components/Common/SearchableSelect';
 import MultiSelectWithServerSearch from '@/components/Common/MultiSelectWithServerSearch';
 import RichTextEditor from '@/components/Common/RichTextEditors';
@@ -28,6 +38,7 @@ import { useUser } from '@/hooks/useSession';
 interface SelectOption {
   value: number;
   label: string;
+  original?: any;
 }
 
 interface FormValues {
@@ -72,20 +83,101 @@ interface FormValues {
   assetsRequired: SelectOption[];
 
   // Description
-  description: string | null;
+  description: string;
 }
 
 const RecruiterJob = () => {
   const user = useUser();
-  const [jobData, setJobData] = useState<any>(null)
-  useEffect(() => {
-    const data: any = localStorage.getItem('jobUpdate')
-    const jobUpdate: any = JSON.parse(data)
-    setJobData(jobUpdate)
+  const [jobData, setJobData] = useState<any>(null);
+  const [title, setTitle] = useState<SelectOption | null>(null);
+  const [city, setCity] = useState<SelectOption | null>(null);
+  const [locality, setLocality] = useState<SelectOption | null>(null);
+  const [category, setCategory] = useState<SelectOption | null>(null);
+  const [documents, setDocuments] = useState<SelectOption[]>([]);
+  const [assets, setAssets] = useState<SelectOption[]>([]);
+  const [skills, setSkills] = useState<SelectOption[]>([]);
+  const [benefits, setBenefits] = useState<SelectOption[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [suggestedTemplate, setSuggestedTemplate] = useState<string>("");
+  const router = useRouter();
+  const [isEditing, setIsEditing] = useState(false);
+  const [hasPrefilled, setHasPrefilled] = useState(false);
 
-  }, [])
-  const validationSchema = yup.object({
-    // Basic Information
+  // Load job data from localStorage on component mount
+  useEffect(() => {
+    const data: any = localStorage.getItem('jobUpdate');
+    if (data) {
+      const jobUpdate = JSON.parse(data);
+      setJobData(jobUpdate); 
+    }
+  }, []);
+
+  // Map prefill data for single select fields
+  const mapPrefillData = (res: any, labelKey: string = 'name') => {
+    if (!res?.data?.items?.length) return null; 
+    const item = res.data.items[0];
+    return {
+      label: item[labelKey],
+      value: item.id,
+      original: item,
+    };
+  };
+
+  // Map prefill data for multi-select fields
+  const mapMultiSelectPrefill = (res: any, labelKey: string) => {
+    if (!res?.data?.items?.length) return []; 
+    return res.data.items.map((item: any) => ({
+      label: item[labelKey],
+      value: item.id,
+      original: {
+        id: item.id,
+        name: item[labelKey],
+      },
+    }));
+  }; 
+
+  useEffect(() => {
+    if (!jobData?.job_id || hasPrefilled) return;
+
+    const fetchAllPrefillData = async () => {
+      try { 
+        const [
+          titleRes,
+          cityRes,
+          localityRes,
+          categoryRes,
+          documentsRes,
+          assetsRes,
+          skillsRes,
+          benefitsRes,
+        ] = await Promise.all([
+          masterPrefillJobTitleService(jobData.job_title_id),
+          masterPrefillCityService(jobData.city_id),
+          masterPrefillLocalityService(jobData.locality_id),
+          masterPrefillCategoryService(jobData.category_id),
+          masterPrefillDocumentsService(jobData.job_id),
+          masterPrefillAssetsRequiredService(jobData.job_id),
+          masterPrefillJobSkillsService(jobData.job_id),
+          masterPrefillBenifitsService(jobData.job_id),
+        ]); 
+        setTitle(mapPrefillData(titleRes));
+        setCity(mapPrefillData(cityRes));
+        setLocality(mapPrefillData(localityRes));
+        setCategory(mapPrefillData(categoryRes)); 
+        // Set multi-select fields
+        setDocuments(mapMultiSelectPrefill(documentsRes, "documentname"));
+        setAssets(mapMultiSelectPrefill(assetsRes, "assetname"));
+        setSkills(mapMultiSelectPrefill(skillsRes, "skillname"));
+        setBenefits(mapMultiSelectPrefill(benefitsRes, "benifitname")); 
+
+      } catch (error) {
+        console.error("Error fetching prefill data:", error);
+      }
+    };
+
+    fetchAllPrefillData();
+  }, [jobData, hasPrefilled]); 
+  const validationSchema = yup.object({ 
     jobTitle: yup
       .object({
         value: yup.number().required('Job Title is required'),
@@ -113,9 +205,7 @@ const RecruiterJob = () => {
 
     jobType: yup.string().required('Job type is required'),
     isContractJob: yup.boolean().default(false),
-    workLocation: yup.string().required('Work location is required'),
-
-    // Location & Demographics
+    workLocation: yup.string().required('Work location is required'), 
     city: yup
       .object({
         value: yup.number().required('City is required'),
@@ -281,14 +371,13 @@ const RecruiterJob = () => {
     // Description
     description: yup
       .string()
-      .nullable()
       .required('Job description is required')
       .test('not-empty', 'Job description is required', (value: any) => {
         return value && value.trim().length > 0;
       }),
   });
 
-  // Initialize form
+  // Initialize form with conditional defaults
   const {
     control,
     handleSubmit,
@@ -302,10 +391,10 @@ const RecruiterJob = () => {
     defaultValues: {
       jobTitle: null,
       category: null,
-      openings: jobData?.openings,
+      openings: '',
       jobType: 'Full-time',
       isContractJob: false,
-      workLocation: 'Work from office',
+      workLocation: 'Office',
       city: null,
       locality: null,
       gender: 'Any',
@@ -319,38 +408,68 @@ const RecruiterJob = () => {
       benefits: [],
       skills: [],
       documents: [],
-      workingDays: '5 days working',
+      workingDays: '5',
       shift: 'Day',
       minJobTiming: '',
       maxJobTiming: '',
-      interviewAddress: user?.user_locality,
+      interviewAddress: user?.user_locality || '',
       candidateCanCall: false,
       communicationWindow: [],
       depositRequired: 'No',
       assetsRequired: [],
-      description: null,
+      description: '',
     },
     mode: 'onBlur',
   });
-
+  const prefillForm = useCallback(() => {
+    if (jobData && title && city && locality && category && !hasPrefilled) { 
+      setValue('jobTitle', title);
+      setValue('category', category);
+      setValue('openings', jobData.openings?.toString() || '');
+      setValue('jobType', jobData.job_type || 'Full-time');
+      setValue('isContractJob', jobData.isContractJob || false);
+      setValue('workLocation', jobData.work_location || 'Office');
+      setValue('city', city);
+      setValue('locality', locality);
+      setValue('gender', jobData.gender || 'Any');
+      setValue('qualification', jobData.qualification || 'Any');
+      setValue('minExperience', jobData.min_experience?.toString() || '');
+      setValue('maxExperience', jobData.max_experience?.toString() || '');
+      setValue('onlyFresher', jobData.only_fresher || false);
+      setValue('salaryBenefits', jobData.salary_benefits || 'Fixed');
+      setValue('salaryMin', jobData.salary_min?.toString() || '');
+      setValue('salaryMax', jobData.salary_max?.toString() || '');
+      setValue('benefits', benefits);
+      setValue('skills', skills);
+      setValue('documents', documents);
+      setValue('workingDays', jobData.working_days?.toString() || '5');
+      setValue('shift', jobData.shift || 'Day');
+      setValue('minJobTiming', jobData.min_job_timing?.toString() || '');
+      setValue('maxJobTiming', jobData.max_job_timing?.toString() || '');
+      setValue('interviewAddress', jobData.interview_address || user?.user_locality || '');
+      setValue('candidateCanCall', jobData.candidate_can_call || false);
+      setValue('communicationWindow', jobData.communication_window || []);
+      setValue('depositRequired', jobData.deposit_required || 'No');
+      setValue('assetsRequired', assets);
+      setValue('description', jobData.description || ''); 
+      setHasPrefilled(true); 
+    }
+  }, [jobData, title, city, locality, category, benefits, skills, documents, assets, user, hasPrefilled, setValue]);
+  // Call prefillForm when all data is ready
+  useEffect(() => {
+    prefillForm();
+  }, [prefillForm]);
 
   // Watch certain fields for conditional logic
   const onlyFresher = useWatch({ control, name: 'onlyFresher' });
-  const candidateCanCall = useWatch({ control, name: 'candidateCanCall' });
-  const isContractJob = useWatch({ control, name: 'isContractJob' });
-  const workLocation = useWatch({ control, name: 'workLocation' });
-  const jobType = useWatch({ control, name: 'jobType' });
-  const salaryBenefits = useWatch({ control, name: 'salaryBenefits' });
-
-
+  const candidateCanCall = useWatch({ control, name: 'candidateCanCall' }); 
   // Handle fresher checkbox
   useEffect(() => {
     if (onlyFresher) {
       setValue('minExperience', '0');
       setValue('maxExperience', '0');
     }
-  }, [onlyFresher, setValue]);
-
+  }, [onlyFresher, setValue]); 
   // Handle communication window checkbox
   useEffect(() => {
     if (candidateCanCall) {
@@ -364,32 +483,25 @@ const RecruiterJob = () => {
   const onSubmit = async (data: FormValues) => {
     setLoading(true);
 
-    try {
-      // Format qualification according to database enum
+    try {  
       const formatQualification = (qual: string): string => {
         const map: Record<string, string> = {
           'Any': 'Any',
-          '10th Pass': 'highschool',
-          '12th Pass': 'intermediate',
-          'Diploma': 'diploma',
-          'Graduate': 'graduate',
-          'Post Graduate': 'postgraduate'
+          'highschool': 'highschool',
+          'intermediate': 'intermediate',
+          'diploma': 'diploma',
+          'graduate': 'graduate',
+          'postgraduate': 'postgraduate'
         };
-        return map[qual] || 'highschool';
+        return map[qual] || 'Any';
       };
-
-      // Determine job type based on contract job checkbox
-      let finalJobType = data.jobType;
-      if (data.isContractJob) {
-        finalJobType = 'Contract';
-      }
 
       // Format work location
       const formatWorkLocation = (location: string): string => {
         const map: Record<string, string> = {
-          'Work from office': 'Office',
-          'Field job': 'Field',
-          'Work from home': 'WorkFromHome'
+          'Office': 'Office',
+          'Field': 'Field',
+          'WorkFromHome': 'WorkFromHome'
         };
         return map[location] || 'Office';
       };
@@ -397,105 +509,65 @@ const RecruiterJob = () => {
       // Format working days
       const formatWorkingDays = (days: string): string => {
         const map: Record<string, string> = {
-          '5 days working': '5',
-          '6 days working': '6',
+          '5': '5',
+          '6': '6',
           'other': 'other'
         };
         return map[days] || '5';
       };
 
+      // Prepare form data for submission
       const formData = {
-        // Required fields from database
-        recruiterId: user?.user_id, // This should come from auth/session
+        // Basic Information
+        recruiterId: user?.user_id,
         titleId: data.jobTitle?.value,
         categoryId: data.category?.value,
         cityId: data.city?.value,
-        localityId: data.locality?.value,
-
-        // Other required fields with defaults
-        hiringForOthers: 0,
+        localityId: data.locality?.value, 
         openings: parseInt(data.openings),
-        agencyId: null,
-
-        // Job type and location
-        jobType: finalJobType,
-        workLocation: formatWorkLocation(data.workLocation),
-
-        // Demographics
+        jobType: data.jobType,
+        workLocation: formatWorkLocation(data.workLocation), 
         gender: data.gender,
-        qualification: formatQualification(data.qualification),
-
-        // Experience (converted to decimal for database)
-        minExerince: data.onlyFresher ? 0 : parseFloat(data.minExperience),
-        maxExperince: data.onlyFresher ? 0 : parseFloat(data.maxExperience),
-        onlyFresher: data.onlyFresher ? 1 : 0,
-
-        // Salary (converted to decimal)
-        salaryBenifits: data.salaryBenefits,
-        salaryMin: parseFloat(data.salaryMin),
-        salaryMax: parseFloat(data.salaryMax),
-
-        // Working days and shift
+        qualification: formatQualification(data.qualification), 
+        minExperience: data.onlyFresher ? 0 : parseFloat(data.minExperience || '0'),
+        maxExperience: data.onlyFresher ? 0 : parseFloat(data.maxExperience || '0'),
+        onlyFresher: data.onlyFresher ? 1 : 0, 
+        salaryBenefits: data.salaryBenefits,
+        salaryMin: parseFloat(data.salaryMin || '0'),
+        salaryMax: parseFloat(data.salaryMax || '0'), 
         workingDays: formatWorkingDays(data.workingDays),
         shift: data.shift,
-
-        // Job timings (converted to decimal)
-        minJobTiming: parseFloat(data.minJobTiming),
-        maxJobTiming: parseFloat(data.maxJobTiming),
-
-        // Deposit and verification
-        depositeRequired: data.depositRequired === 'Yes' ? 1 : 0,
-        verificationRequired: 0,
-
-        // Interview and communication
+        minJobTiming: parseFloat(data.minJobTiming || '0'),
+        maxJobTiming: parseFloat(data.maxJobTiming || '0'), 
         interviewAddress: data.interviewAddress,
-        communicationWindow: data.communicationWindow,
         candidateCanCall: data.candidateCanCall ? 1 : 0,
-
-        // Job posting type
+        communicationWindow: data.communicationWindow, 
+        depositRequired: data.depositRequired === 'Yes' ? 1 : 0, 
+        description: data.description, 
         jobPostingFor: 'INDIVIDUAL',
-
-        // Description and status
-        description: data.description,
-        status: 'DRAFT',
-        adminComments: null,
-
-        // Audit fields
-        createdBy: 1,
-        updatedBy: 1,
-
-        // Arrays for related tables
+        status: 'DRAFT', 
         jobSkillsIds: data.skills.map(skill => skill.value),
         assetsIds: data.assetsRequired.map(asset => asset.value),
-        documetnsIds: data.documents.map(doc => doc.value),
-        jobBenitsIds: data.benefits.map(benefit => benefit.value)
+        documentsIds: data.documents.map(doc => doc.value),
+        jobBenefitsIds: data.benefits.map(benefit => benefit.value), 
       };
-      const response = await JobPostService(formData);
-      if (!response?.success) {
-        return showAlert("error", response?.message, "Failed");
-      }
-      showAlert("success", response?.message, "Success");
-      router.replace("/recruiter/job/list");
 
-    } catch (error) {
+      console.log("Processed form data for API:", formData);
+ 
+    } catch (error: any) {
       console.error('Error submitting form:', error);
-      alert('An error occurred while posting the job');
+      showAlert('error', error.message || 'An error occurred while posting the job');
     } finally {
       setLoading(false);
     }
-  };
-
-  const [loading, setLoading] = useState(false);
-  const [suggestedTemplate, setSuggestedTemplate] = useState<string>("");
-  const router = useRouter();
-
+  }; 
   return (
     <div className='jobposting'>
       {loading && <Loader />}
       <div className='container'>
         <div className='row'>
           <div className='col-md-12'>
-            <form onSubmit={handleSubmit((data: any) => onSubmit(data))} noValidate>
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
               <div className='formsection'>
 
                 {/* Job Basic Information */}
@@ -597,34 +669,18 @@ const RecruiterJob = () => {
                               >
                                 Part Time
                               </button>
+                              <button
+                                className={`btn ${field.value === 'Contract' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                type="button"
+                                onClick={() => field.onChange('Contract')}
+                              >
+                                Contract
+                              </button>
                             </>
                           )}
                         />
                       </div>
-                      <div className="mb-3 form-check">
-                        <Controller
-                          name="isContractJob"
-                          control={control}
-                          render={({ field }) => (
-                            <input
-                              type="checkbox"
-                              className="form-check-input"
-                              checked={field.value}
-                              onChange={(e) => {
-                                field.onChange(e.target.checked);
-                                // If contract job is checked, set job type to Contract
-                                if (e.target.checked) {
-                                  setValue('jobType', 'Contract', { shouldValidate: true });
-                                } else {
-                                  setValue('jobType', 'Full-time', { shouldValidate: true });
-                                }
-                              }}
-                              onBlur={field.onBlur}
-                            />
-                          )}
-                        />
-                        <label className="form-check-label">It is a Contract Job</label>
-                      </div>
+                      {errors.jobType && <div className="text-danger small">{errors.jobType.message}</div>}
                     </div>
                   </div>
 
@@ -638,23 +694,23 @@ const RecruiterJob = () => {
                           render={({ field }) => (
                             <>
                               <button
-                                className={`btn ${field.value === 'Work from office' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                className={`btn ${field.value === 'Office' ? 'btn-primary selected' : 'btn-outline-primary'}`}
                                 type="button"
-                                onClick={() => field.onChange('Work from office')}
+                                onClick={() => field.onChange('Office')}
                               >
                                 Work from office
                               </button>
                               <button
-                                className={`btn ${field.value === 'Field job' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                className={`btn ${field.value === 'Field' ? 'btn-primary selected' : 'btn-outline-primary'}`}
                                 type="button"
-                                onClick={() => field.onChange('Field job')}
+                                onClick={() => field.onChange('Field')}
                               >
                                 Field job
                               </button>
                               <button
-                                className={`btn ${field.value === 'Work from home' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                className={`btn ${field.value === 'WorkFromHome' ? 'btn-primary selected' : 'btn-outline-primary'}`}
                                 type="button"
-                                onClick={() => field.onChange('Work from home')}
+                                onClick={() => field.onChange('WorkFromHome')}
                               >
                                 Work from home
                               </button>
@@ -662,6 +718,7 @@ const RecruiterJob = () => {
                           )}
                         />
                       </div>
+                      {errors.workLocation && <div className="text-danger small">{errors.workLocation.message}</div>}
                     </div>
                   </div>
 
@@ -688,7 +745,6 @@ const RecruiterJob = () => {
                   </div>
                 </div>
 
-                {/* Location & Demographics */}
                 <div className='row'>
                   <div className='col-md-4'>
                     <div className="mb-3">
@@ -746,6 +802,7 @@ const RecruiterJob = () => {
                           )}
                         />
                       </div>
+                      {errors.gender && <div className="text-danger small">{errors.gender.message}</div>}
                     </div>
                   </div>
 
@@ -766,37 +823,37 @@ const RecruiterJob = () => {
                                 Any
                               </button>
                               <button
-                                className={`btn ${field.value === '10th Pass' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                className={`btn ${field.value === 'highschool' ? 'btn-primary selected' : 'btn-outline-primary'}`}
                                 type="button"
-                                onClick={() => field.onChange('10th Pass')}
+                                onClick={() => field.onChange('highschool')}
                               >
                                 10th Pass
                               </button>
                               <button
-                                className={`btn ${field.value === '12th Pass' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                className={`btn ${field.value === 'intermediate' ? 'btn-primary selected' : 'btn-outline-primary'}`}
                                 type="button"
-                                onClick={() => field.onChange('12th Pass')}
+                                onClick={() => field.onChange('intermediate')}
                               >
                                 12th Pass
                               </button>
                               <button
-                                className={`btn ${field.value === 'Diploma' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                className={`btn ${field.value === 'diploma' ? 'btn-primary selected' : 'btn-outline-primary'}`}
                                 type="button"
-                                onClick={() => field.onChange('Diploma')}
+                                onClick={() => field.onChange('diploma')}
                               >
                                 Diploma
                               </button>
                               <button
-                                className={`btn ${field.value === 'Graduate' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                className={`btn ${field.value === 'graduate' ? 'btn-primary selected' : 'btn-outline-primary'}`}
                                 type="button"
-                                onClick={() => field.onChange('Graduate')}
+                                onClick={() => field.onChange('graduate')}
                               >
                                 Graduate
                               </button>
                               <button
-                                className={`btn ${field.value === 'Post Graduate' ? 'btn-primary selected' : 'btn-outline-primary'}`}
+                                className={`btn ${field.value === 'postgraduate' ? 'btn-primary selected' : 'btn-outline-primary'}`}
                                 type="button"
-                                onClick={() => field.onChange('Post Graduate')}
+                                onClick={() => field.onChange('postgraduate')}
                               >
                                 Post Graduate
                               </button>
@@ -804,6 +861,7 @@ const RecruiterJob = () => {
                           )}
                         />
                       </div>
+                      {errors.qualification && <div className="text-danger small">{errors.qualification.message}</div>}
                     </div>
                   </div>
                 </div>
@@ -907,6 +965,7 @@ const RecruiterJob = () => {
                           )}
                         />
                       </div>
+                      {errors.salaryBenefits && <div className="text-danger small">{errors.salaryBenefits.message}</div>}
                     </div>
                   </div>
 
@@ -967,7 +1026,6 @@ const RecruiterJob = () => {
                   </div>
                 </div>
 
-                {/* Skills & Benefits */}
                 <div className='row'>
                   <div className='col-md-4'>
                     <div className="mb-3">
@@ -1108,16 +1166,16 @@ const RecruiterJob = () => {
                           render={({ field }) => (
                             <>
                               <button
-                                className={`btn ${field.value === '5 days working' ? 'btn-primary active' : 'btn-outline-primary'}`}
+                                className={`btn ${field.value === '5' ? 'btn-primary active' : 'btn-outline-primary'}`}
                                 type="button"
-                                onClick={() => field.onChange('5 days working')}
+                                onClick={() => field.onChange('5')}
                               >
                                 5 days working <IoCheckmark />
                               </button>
                               <button
-                                className={`btn ${field.value === '6 days working' ? 'btn-primary active' : 'btn-outline-primary'}`}
+                                className={`btn ${field.value === '6' ? 'btn-primary active' : 'btn-outline-primary'}`}
                                 type="button"
-                                onClick={() => field.onChange('6 days working')}
+                                onClick={() => field.onChange('6')}
                               >
                                 6 days working <GoPlus />
                               </button>
@@ -1125,6 +1183,7 @@ const RecruiterJob = () => {
                           )}
                         />
                       </div>
+                      {errors.workingDays && <div className="text-danger small">{errors.workingDays.message}</div>}
                     </div>
                   </div>
 
@@ -1162,11 +1221,11 @@ const RecruiterJob = () => {
                           )}
                         />
                       </div>
+                      {errors.shift && <div className="text-danger small">{errors.shift.message}</div>}
                     </div>
                   </div>
                 </div>
 
-                {/* Interview Details */}
                 <div className='row'>
                   <div className='col-md-12'>
                     <div className="mb-3">
@@ -1214,7 +1273,6 @@ const RecruiterJob = () => {
                   </div>
                 </div>
 
-                {/* Deposit & Assets */}
                 <div className='row'>
                   <div className='col-md-12'>
                     <div className="mb-3">
@@ -1246,6 +1304,7 @@ const RecruiterJob = () => {
                           )}
                         />
                       </div>
+                      {errors.depositRequired && <div className="text-danger small">{errors.depositRequired.message}</div>}
                     </div>
                   </div>
                 </div>
@@ -1259,7 +1318,6 @@ const RecruiterJob = () => {
                         control={control}
                         render={({ field }) => (
                           <MultiSelectWithServerSearch
-
                             placeholder="Search Assets Required"
                             value={field.value}
                             onChange={field.onChange}
@@ -1277,11 +1335,13 @@ const RecruiterJob = () => {
 
                 {/* Generate Suggested Template */}
                 <div className="mb-3 text-end">
+                  
                   <button
                     type="button"
                     className="btn btn-sm btn-outline-primary"
                     onClick={() => {
                       const values = getValues();
+                      console.log("Generating template with values:", values);
                       const template = generateJobDescription(values);
                       setSuggestedTemplate(template);
                     }}
@@ -1295,7 +1355,6 @@ const RecruiterJob = () => {
                   <div className="mb-4">
                     <div className="d-flex justify-content-between align-items-center mb-2">
                       <label className="form-label mb-0">Suggested Template</label>
-
                       <button
                         type="button"
                         className="btn btn-sm btn-primary"
@@ -1310,7 +1369,6 @@ const RecruiterJob = () => {
                         Apply
                       </button>
                     </div>
-
                     <div
                       className="form-control"
                       style={{
@@ -1322,6 +1380,7 @@ const RecruiterJob = () => {
                     />
                   </div>
                 )}
+
                 {/* Job Description */}
                 <div className="row">
                   <div className="col-md-12 mb-5">
@@ -1341,7 +1400,6 @@ const RecruiterJob = () => {
                   </div>
                 </div>
 
-                {/* Submit Button */}
                 <div className='row'>
                   <div className='col-md-12'>
                     <div className='submitBtn'>
@@ -1350,19 +1408,25 @@ const RecruiterJob = () => {
                         className="btn btn-primary"
                         disabled={isSubmitting || loading}
                       >
-                        {isSubmitting || loading ? 'Posting...' : 'Post this job'}
+                        {isSubmitting || loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            {isEditing ? 'Updating...' : 'Posting...'}
+                          </>
+                        ) : (
+                          isEditing ? 'Update Job' : 'Post this job'
+                        )}
                       </button>
                     </div>
                   </div>
                 </div>
-
               </div>
             </form>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default RecruiterJob
+export default RecruiterJob;

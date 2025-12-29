@@ -17,22 +17,79 @@ export const deleteJobPstedServices = async (id: any) => {
   return res.data;
 };
 
-export const recruiterDocumentServices = async (id: any) => {
-  const res = await axiosInstance.delete(`/api/recruiter-document-upload?limit=30&jobId=${id}`);
-  return res.data;
-};
-export const recruiterAssestServices = async (id: any) => {
-  const res = await axiosInstance.delete(`/api/recruiter-assets-required?limit=30&jobId=${id}`);
-  return res.data;
-};
-export const recruiterSkillsServices = async (id: any) => {
-  const res = await axiosInstance.delete(`/api/recruiter-skills?limit=30&jobId=${id}`);
-  return res.data;
+ 
+
+// Master Prefill Services
+export const masterPrefillCategoryService = async (id:any) => {
+  try {
+    const response = await axiosInstance.get(`/api/master-category?id=${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
-export const recruiterJobBenefitsServices = async (id: any) => {
-  const res = await axiosInstance.delete(`/api/recruiter-job-benifit?limit=30&jobId=${id}`);
-  return res.data;
+export const masterPrefillJobTitleService = async (id:any) => {
+  try {
+    const response = await axiosInstance.get(`/api/master-job-title?id=${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
-// recruiterDocumentServices  recruiterAssestServices recruiterSkillsServices recruiterJobBenefitsServices
+export const masterPrefillCityService = async (id:any) => {
+  try {
+    const response = await axiosInstance.get(`/api/master-city?id=${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const masterPrefillLocalityService = async (id:any) => {
+  try {
+    const response = await axiosInstance.get(`/api/master-locality?id=${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+// masterPrefillCityService masterPrefillLocalityService masterPrefillCategoryService
+
+export const masterPrefillBenifitsService = async (id:any) => {
+  try {
+    const response = await axiosInstance.get(`/api/recruiter-job-benifit?jobId=${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const masterPrefillJobSkillsService = async (id:any) => {
+  try {
+    const response = await axiosInstance.get(`/api/recruiter-skills?jobId=${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const masterPrefillDocumentsService = async (id:any) => {
+  try {
+    const response = await axiosInstance.get(`/api/recruiter-document-upload?jobId=${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const masterPrefillAssetsRequiredService = async (id:any) => {
+  try {
+    const response = await axiosInstance.get(`/api/recruiter-assets-required?jobId=${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
