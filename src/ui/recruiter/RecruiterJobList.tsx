@@ -105,6 +105,7 @@ const RecruiterJobList = () => {
   }
   return (
     <div className="jobposting">
+      
       <div className="container">
         <div className="row">
           <div className="col-md-12">

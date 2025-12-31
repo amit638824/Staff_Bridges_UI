@@ -1332,8 +1332,7 @@ const RecruiterJob = () => {
                     />
                     {errors.description && <div className="text-danger small">{errors.description.message}</div>}
                   </div>
-                </div>
-
+                </div> 
                 {/* Submit Button */}
                 <div className='row'>
                   <div className='col-md-12'>

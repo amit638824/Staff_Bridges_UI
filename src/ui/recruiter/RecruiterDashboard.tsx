@@ -1,16 +1,29 @@
 "use client"
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from "next/link";
 import { MdInfoOutline } from "react-icons/md";
 import { MdOutlineFileUpload } from "react-icons/md";
 import { FiBriefcase } from "react-icons/fi";
 import { FaRegClock } from "react-icons/fa";
-import { useUser } from '@/hooks/useSession';
+import { useSession, useUser } from '@/hooks/useSession';
+import { getRecruiterDashboard } from '@/services/RecruiterService';
+
 const RecruiterDashboard = () => {
-  const user =useUser();
+  const [sessionData, setSessionData] = useState<any>(null)
+  const user = useUser();
+  const session = useSession();
+  useEffect(() => {
+    fetchData()
+  }, [])
+  const fetchData = async () => {
+    console.log(session?.user?.user_id);
+    const result = await getRecruiterDashboard(session?.user?.user_id)
+    setSessionData(result?.data)
+  }
+  
   return (
     <div className='recruiter-wrapper'>
-     <div className='content-recruiter'>
+      <div className='content-recruiter'>
         <div className='container'>
           <div className='row'>
             <div className='col-md-12'>
@@ -32,7 +45,7 @@ const RecruiterDashboard = () => {
                   </div>
                   <div className="carousel-inner">
                     <div className="carousel-item active">
-                      
+
                       <img src="/assets/images/recruiter-banner.jpg" className="d-block w-100" alt="..." />
                       <div className="carousel-caption d-none d-md-block">
                         <h5>See what's new on STAFF BRIDGES!</h5>
@@ -71,87 +84,114 @@ const RecruiterDashboard = () => {
             <div className='col-md-12'>
               <div className='verification-steps'>
                 <div className='card'>
-                      <div className='cardHeading'><img src="/assets/images/hugeicons_security-check.svg" />Verification Steps</div>
-                      <div className="progress">
-                        <div
-                          className="progress-bar bg-success"
-                          role="progressbar"
-                          aria-label="Segment two"
-                          style={{ width: "30%" }}
-                          aria-valuenow={30}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                        ></div>
-                      </div>
-                      <div className='card-content'>
-                        <div className='checkboxText'>
-                          <input className="form-check-input" type="checkbox" value="" defaultChecked id="flexCheckDefault" />
-                          <span>Create an account</span>
-                        </div>
-                        <div className='buttonstatus'>
-                            <span className='statusbtn completed'>Completed</span>
-                        </div>
-                        <div className='lastbtn'></div>
-                      </div>
+                  <div className='cardHeading'><img src="/assets/images/hugeicons_security-check.svg" />Verification Steps</div>
+                  <div className="progress">
+                    <div
+                      className="progress-bar bg-success"
+                      role="progressbar"
+                      aria-label="Segment two"
+                      style={{ width: "30%" }}
+                      aria-valuenow={30}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                    ></div>
+                  </div>
+                  <div className='card-content'>
+                    <div className='checkboxText'>
+                      <input className="form-check-input" type="checkbox" value="" defaultChecked id="flexCheckDefault" />
+                      <span>Create an account</span>
+                    </div>
+                    <div className='buttonstatus'>
+                      <span
+                        className={`statusbtn ${sessionData?.isAccountCreated === 1 ? "btn-warning completed" : "btn-danger"
+                          }`}
+                      >
+                        {sessionData?.isAccountCreated === 1 ? "Completed" : "InCompleted"}
+                      </span>
+                    </div>
+                    <div className='lastbtn'></div>
+                  </div>
 
-                      <div className='card-content'>
-                        <div className='checkboxText'>
-                          <input className="form-check-input" type="checkbox" value="" defaultChecked id="flexCheckDefault" />
-                          <span>Post your first job</span>
-                        </div>
-                        <div className='buttonstatus'>
-                            <span className='statusbtn under-review'>Under Review <img src="/assets/images/caution.svg" /></span>
-                        </div>
-                        <div className='lastbtn'><Link href="#">View</Link></div>
-                      </div>
+                  <div className='card-content'>
+                    <div className='checkboxText'>
+                      <input className="form-check-input" type="checkbox" value="" defaultChecked id="flexCheckDefault" />
+                      <span>Post your first job</span>
+                    </div>
+                    <div className='buttonstatus'>
 
-                      <div className='card-content'>
-                        <div className='checkboxText'>
-                          <input className="form-check-input" type="checkbox" value="" defaultChecked id="flexCheckDefault" />
-                          <span>Email Verification</span>
-                        </div>
-                        <div className='buttonstatus'>
-                            <span className='statusbtn completed'>Completed</span>
-                        </div>
-                        <div className='lastbtn'></div>
-                      </div>
+                      <span
+                        className={`statusbtn ${sessionData?.firstJobVerified === 1 ? "btn-warning completed" : "btn-danger"
+                          }`}
+                      >
+                        {sessionData?.firstJobVerified === 1 ? (   "Verified"    ) : (    <>    Under Review <img src="/assets/images/caution.svg" alt="Under Review" />  </> )}
 
-                      <div className='card-content'>
-                        <div className='checkboxText'>
-                          <input className="form-check-input" type="checkbox" value=""  id="flexCheckDefault" />
-                          <span>Document Submission</span>
-                        </div>
-                        <div className='buttonstatus'>
-                            <span className='statusbtn'>Not Started</span>
-                        </div>
-                        <div className='lastbtn'><Link href="#"><span className='infoicon'><MdOutlineFileUpload /></span> Upload</Link></div>
-                      </div>
+                      </span>
+                    </div>
+                    <div className='lastbtn'><Link href="#">View</Link></div>
+                  </div>
 
-                      <div className='card-content'>
-                        <div className='checkboxText'>
-                          <input className="form-check-input" type="checkbox" value=""  id="flexCheckDefault" />
-                          <span>Verification</span>
-                        </div>
-                        <div className='buttonstatus'>
-                            <span className='statusbtn'>Pending</span>
-                        </div>
-                        <div className='lastbtn'><Link href="#"><span className='infoicon'><MdInfoOutline /></span> Info</Link></div>
-                      </div>
-                      
-                  
+                  <div className='card-content'>
+                    <div className='checkboxText'>
+                      <input className="form-check-input" type="checkbox" value="" defaultChecked id="flexCheckDefault" />
+                      <span>Email Verification</span>
+                    </div>
+                    <div className='buttonstatus'>
+                      <span
+                        className={`statusbtn ${sessionData?.isEmailVerified === 1 ? "btn-warning completed" : "btn-danger"
+                          }`}
+                      >
+                        {sessionData?.isEmailVerified === 1 ? "Completed" : "InCompleted"}
+                      </span>
+                    </div>
+                    <div className='lastbtn'></div>
+                  </div>
+
+                  <div className='card-content'>
+                    <div className='checkboxText'>
+                      <input className="form-check-input" type="checkbox" value="" id="flexCheckDefault" />
+                      <span>Document Submission</span>
+                    </div>
+                    <div className='buttonstatus'>
+                      <span
+                        className={`statusbtn ${sessionData?.documentSubmission === 1 ? "btn-warning completed" : "btn-danger"
+                          }`}
+                      >
+                        {sessionData?.documentSubmission === 1 ? "Started" : "Not Started"}
+                      </span>
+                    </div>
+                    <div className='lastbtn'><Link href="#"><span className='infoicon'><MdOutlineFileUpload /></span> Upload</Link></div>
+                  </div>
+
+                  <div className='card-content'>
+                    <div className='checkboxText'>
+                      <input className="form-check-input" type="checkbox" value="" id="flexCheckDefault" />
+                      <span>Verification</span>
+                    </div>
+                    <div className='buttonstatus'>
+                      <span
+                        className={`statusbtn ${sessionData?.isVerified === 1 ? "btn-warning completed" : "btn-danger"
+                          }`}
+                      >
+                        {sessionData?.isVerified === 1 ? "Completed" : "Pending"}
+                      </span>
+                    </div>
+                    <div className='lastbtn'><Link href="#"><span className='infoicon'><MdInfoOutline /></span> Info</Link></div>
+                  </div>
+
+
                 </div>
               </div>
             </div>
 
           </div>
 
-          <div className='row'>            
+          <div className='row'>
             <div className='col-md-3'>
               <div className='kpiBoxArea'>
                 <div className='iconKpi'><FiBriefcase /></div>
                 <div className='contentKpi'>
                   <span className='kpiText'>Live Jobs</span>
-                  <span className='kpiNumnber'>0</span>
+                  <span className='kpiNumnber'>{sessionData?.liveJob}</span>
                 </div>
               </div>
             </div>
@@ -161,7 +201,7 @@ const RecruiterDashboard = () => {
                 <div className='iconKpi'><FaRegClock /></div>
                 <div className='contentKpi'>
                   <span className='kpiText'>Under Review Jobs</span>
-                  <span className='kpiNumnber'>0</span>
+                  <span className='kpiNumnber'>{sessionData?.underReviewJob}</span>
                 </div>
               </div>
             </div>
@@ -171,7 +211,7 @@ const RecruiterDashboard = () => {
                 <div className='iconKpi'><img src="/assets/images/coin.png" /></div>
                 <div className='contentKpi'>
                   <span className='kpiText'>Credits</span>
-                  <span className='kpiNumnber'>0</span>
+                  <span className='kpiNumnber'>{sessionData?.credits}</span>
                 </div>
               </div>
             </div>
@@ -181,7 +221,7 @@ const RecruiterDashboard = () => {
                 <div className='iconKpi'><FiBriefcase /></div>
                 <div className='contentKpi'>
                   <span className='kpiText'>Pending Candidates</span>
-                  <span className='kpiNumnber'>0</span>
+                  <span className='kpiNumnber'>{sessionData?.pendingCandidate}</span>
                 </div>
               </div>
             </div>
