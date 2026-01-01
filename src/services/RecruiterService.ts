@@ -12,6 +12,11 @@ export const getRecruiterJobList = async (page = 1, limit = 10) => {
   return res.data;
 };
 
+export const getRecruiterDashboard = async (id :any) => {
+  const res = await axiosInstance.get(`/api/recruiter-verification-data?id=${id}`);
+  return res.data;
+};
+
 export const deleteJobPstedServices = async (id: any) => {
   const res = await axiosInstance.delete(`/api/recruiter-jobpost-delete/${id}`);
   return res.data;
@@ -93,3 +98,28 @@ export const masterPrefillAssetsRequiredService = async (id:any) => {
   }
 };
 
+ 
+export const recruiterDocumentUpload = async (formData: FormData) => {
+  try {
+    const response = await axiosInstance.post(
+      `/api/recruiter-document-upload`, // ये endpoint correct है
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const recruiterAllUploadedDocDocument = async (id:any) => {
+  try {
+    const response = await axiosInstance.get(`/api/recruiter-document-upload?page=1&limit=20&userId=${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

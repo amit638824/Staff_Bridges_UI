@@ -108,13 +108,13 @@ const RecruiterJob = () => {
     const data: any = localStorage.getItem('jobUpdate');
     if (data) {
       const jobUpdate = JSON.parse(data);
-      setJobData(jobUpdate); 
+      setJobData(jobUpdate);
     }
   }, []);
 
   // Map prefill data for single select fields
   const mapPrefillData = (res: any, labelKey: string = 'name') => {
-    if (!res?.data?.items?.length) return null; 
+    if (!res?.data?.items?.length) return null;
     const item = res.data.items[0];
     return {
       label: item[labelKey],
@@ -125,7 +125,7 @@ const RecruiterJob = () => {
 
   // Map prefill data for multi-select fields
   const mapMultiSelectPrefill = (res: any, labelKey: string) => {
-    if (!res?.data?.items?.length) return []; 
+    if (!res?.data?.items?.length) return [];
     return res.data.items.map((item: any) => ({
       label: item[labelKey],
       value: item.id,
@@ -134,13 +134,14 @@ const RecruiterJob = () => {
         name: item[labelKey],
       },
     }));
-  }; 
+  };
 
   useEffect(() => {
     if (!jobData?.job_id || hasPrefilled) return;
 
     const fetchAllPrefillData = async () => {
-      try { 
+      try {
+        setLoading(true)
         const [
           titleRes,
           cityRes,
@@ -159,25 +160,26 @@ const RecruiterJob = () => {
           masterPrefillAssetsRequiredService(jobData.job_id),
           masterPrefillJobSkillsService(jobData.job_id),
           masterPrefillBenifitsService(jobData.job_id),
-        ]); 
+        ]);
         setTitle(mapPrefillData(titleRes));
         setCity(mapPrefillData(cityRes));
         setLocality(mapPrefillData(localityRes));
-        setCategory(mapPrefillData(categoryRes)); 
+        setCategory(mapPrefillData(categoryRes));
         // Set multi-select fields
         setDocuments(mapMultiSelectPrefill(documentsRes, "documentname"));
         setAssets(mapMultiSelectPrefill(assetsRes, "assetname"));
         setSkills(mapMultiSelectPrefill(skillsRes, "skillname"));
-        setBenefits(mapMultiSelectPrefill(benefitsRes, "benifitname")); 
-
+        setBenefits(mapMultiSelectPrefill(benefitsRes, "benifitname"));
+        setLoading(false)
       } catch (error) {
         console.error("Error fetching prefill data:", error);
+        setLoading(false)
       }
     };
 
     fetchAllPrefillData();
-  }, [jobData, hasPrefilled]); 
-  const validationSchema = yup.object({ 
+  }, [jobData, hasPrefilled]);
+  const validationSchema = yup.object({
     jobTitle: yup
       .object({
         value: yup.number().required('Job Title is required'),
@@ -205,7 +207,7 @@ const RecruiterJob = () => {
 
     jobType: yup.string().required('Job type is required'),
     isContractJob: yup.boolean().default(false),
-    workLocation: yup.string().required('Work location is required'), 
+    workLocation: yup.string().required('Work location is required'),
     city: yup
       .object({
         value: yup.number().required('City is required'),
@@ -422,7 +424,7 @@ const RecruiterJob = () => {
     mode: 'onBlur',
   });
   const prefillForm = useCallback(() => {
-    if (jobData && title && city && locality && category && !hasPrefilled) { 
+    if (jobData && title && city && locality && category && !hasPrefilled) {
       setValue('jobTitle', title);
       setValue('category', category);
       setValue('openings', jobData.openings?.toString() || '');
@@ -451,8 +453,8 @@ const RecruiterJob = () => {
       setValue('communicationWindow', jobData.communication_window || []);
       setValue('depositRequired', jobData.deposit_required || 'No');
       setValue('assetsRequired', assets);
-      setValue('description', jobData.description || ''); 
-      setHasPrefilled(true); 
+      setValue('description', jobData.description || '');
+      setHasPrefilled(true);
     }
   }, [jobData, title, city, locality, category, benefits, skills, documents, assets, user, hasPrefilled, setValue]);
   // Call prefillForm when all data is ready
@@ -462,14 +464,14 @@ const RecruiterJob = () => {
 
   // Watch certain fields for conditional logic
   const onlyFresher = useWatch({ control, name: 'onlyFresher' });
-  const candidateCanCall = useWatch({ control, name: 'candidateCanCall' }); 
+  const candidateCanCall = useWatch({ control, name: 'candidateCanCall' });
   // Handle fresher checkbox
   useEffect(() => {
     if (onlyFresher) {
       setValue('minExperience', '0');
       setValue('maxExperience', '0');
     }
-  }, [onlyFresher, setValue]); 
+  }, [onlyFresher, setValue]);
   // Handle communication window checkbox
   useEffect(() => {
     if (candidateCanCall) {
@@ -483,7 +485,7 @@ const RecruiterJob = () => {
   const onSubmit = async (data: FormValues) => {
     setLoading(true);
 
-    try {  
+    try {
       const formatQualification = (qual: string): string => {
         const map: Record<string, string> = {
           'Any': 'Any',
@@ -523,44 +525,44 @@ const RecruiterJob = () => {
         titleId: data.jobTitle?.value,
         categoryId: data.category?.value,
         cityId: data.city?.value,
-        localityId: data.locality?.value, 
+        localityId: data.locality?.value,
         openings: parseInt(data.openings),
         jobType: data.jobType,
-        workLocation: formatWorkLocation(data.workLocation), 
+        workLocation: formatWorkLocation(data.workLocation),
         gender: data.gender,
-        qualification: formatQualification(data.qualification), 
+        qualification: formatQualification(data.qualification),
         minExperience: data.onlyFresher ? 0 : parseFloat(data.minExperience || '0'),
         maxExperience: data.onlyFresher ? 0 : parseFloat(data.maxExperience || '0'),
-        onlyFresher: data.onlyFresher ? 1 : 0, 
+        onlyFresher: data.onlyFresher ? 1 : 0,
         salaryBenefits: data.salaryBenefits,
         salaryMin: parseFloat(data.salaryMin || '0'),
-        salaryMax: parseFloat(data.salaryMax || '0'), 
+        salaryMax: parseFloat(data.salaryMax || '0'),
         workingDays: formatWorkingDays(data.workingDays),
         shift: data.shift,
         minJobTiming: parseFloat(data.minJobTiming || '0'),
-        maxJobTiming: parseFloat(data.maxJobTiming || '0'), 
+        maxJobTiming: parseFloat(data.maxJobTiming || '0'),
         interviewAddress: data.interviewAddress,
         candidateCanCall: data.candidateCanCall ? 1 : 0,
-        communicationWindow: data.communicationWindow, 
-        depositRequired: data.depositRequired === 'Yes' ? 1 : 0, 
-        description: data.description, 
+        communicationWindow: data.communicationWindow,
+        depositRequired: data.depositRequired === 'Yes' ? 1 : 0,
+        description: data.description,
         jobPostingFor: 'INDIVIDUAL',
-        status: 'DRAFT', 
+        status: 'DRAFT',
         jobSkillsIds: data.skills.map(skill => skill.value),
         assetsIds: data.assetsRequired.map(asset => asset.value),
         documentsIds: data.documents.map(doc => doc.value),
-        jobBenefitsIds: data.benefits.map(benefit => benefit.value), 
+        jobBenefitsIds: data.benefits.map(benefit => benefit.value),
       };
 
       console.log("Processed form data for API:", formData);
- 
+
     } catch (error: any) {
       console.error('Error submitting form:', error);
       showAlert('error', error.message || 'An error occurred while posting the job');
     } finally {
       setLoading(false);
     }
-  }; 
+  };
   return (
     <div className='jobposting'>
       {loading && <Loader />}
@@ -1335,7 +1337,7 @@ const RecruiterJob = () => {
 
                 {/* Generate Suggested Template */}
                 <div className="mb-3 text-end">
-                  
+
                   <button
                     type="button"
                     className="btn btn-sm btn-outline-primary"

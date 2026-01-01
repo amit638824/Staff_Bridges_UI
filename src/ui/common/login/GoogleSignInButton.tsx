@@ -5,6 +5,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import { useDispatch } from "react-redux";
 import { login } from "@/redux/slice/authSlice";
 import { useRouter } from "next/navigation";
+import { setUserDetails } from "@/redux/slice/userDetailSlice";
 
 export default function GoogleButton() {
     const dispatch = useDispatch();
@@ -20,11 +21,10 @@ export default function GoogleButton() {
                     const data = await socialLoginService(idToken);
 
                     if (data.success) {
-                        const { token, user } = data.data;
+                        const { token, user }: any = data.data;
 
                         // Save token
-                        localStorage.setItem("token", token);
-
+                        localStorage.setItem("token", token); 
                         // Update redux store
                         dispatch(login({ user, token }));
                         switch (user.roletbl_roleName) {

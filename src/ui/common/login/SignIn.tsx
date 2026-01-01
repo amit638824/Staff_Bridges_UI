@@ -16,7 +16,7 @@ import { FaRegEyeSlash } from "react-icons/fa";
 import Loader from "@/ui/common/loader/Loader";
 import { useRouter } from "next/navigation";
 import PasswordChecklist from "react-password-checklist";
-import { useSession } from "@/hooks/useSession";
+import { useSession } from "@/hooks/useSession"; 
 
 /* ================= VALIDATION ================= */
 const schema = Yup.object().shape({
@@ -94,7 +94,7 @@ const SignIn = () => {
     try {
       setLoading(true);
 
-      const response = await loginService(formData);
+      const response: any = await loginService(formData);
       if (!response?.success) {
         return showAlert("error", response?.message || "Login failed", "Failed");
       }
@@ -109,9 +109,8 @@ const SignIn = () => {
       }
 
       localStorage.setItem("token", response.data.token);
-
-      dispatch(login({ user: response.data.user, token: response.data.token }));
-
+      const data: any = { user: response.data.user, token: response.data.token }
+      dispatch(login(data)); 
       const role = response.data.user?.roletbl_roleName;
 
       switch (role) {
