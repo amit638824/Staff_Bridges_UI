@@ -105,7 +105,7 @@ const RecruiterJobList = () => {
   }
   return (
     <div className="jobposting">
-      
+      {loading && <Loader />}
       <div className="container">
         <div className="row">
           <div className="col-md-12">

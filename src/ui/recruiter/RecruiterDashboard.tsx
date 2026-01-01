@@ -7,22 +7,29 @@ import { FiBriefcase } from "react-icons/fi";
 import { FaRegClock } from "react-icons/fa";
 import { useSession, useUser } from '@/hooks/useSession';
 import { getRecruiterDashboard } from '@/services/RecruiterService';
+import Loader from '../common/loader/Loader';
 
 const RecruiterDashboard = () => {
   const [sessionData, setSessionData] = useState<any>(null)
   const user = useUser();
   const session = useSession();
+  const [loading, setLoading] = useState(false)
   useEffect(() => {
     fetchData()
   }, [])
   const fetchData = async () => {
-    console.log(session?.user?.user_id);
-    const result = await getRecruiterDashboard(session?.user?.user_id)
-    setSessionData(result?.data)
+    if (session?.user?.user_id) {
+      setLoading(true)
+      const result = await getRecruiterDashboard(session?.user?.user_id)
+      setSessionData(result?.data)
+      setLoading(false)
+    }
+
   }
-  
+
   return (
     <div className='recruiter-wrapper'>
+      {loading && <Loader/>}
       <div className='content-recruiter'>
         <div className='container'>
           <div className='row'>
@@ -123,11 +130,11 @@ const RecruiterDashboard = () => {
                         className={`statusbtn ${sessionData?.firstJobVerified === 1 ? "btn-warning completed" : "btn-danger"
                           }`}
                       >
-                        {sessionData?.firstJobVerified === 1 ? (   "Verified"    ) : (    <>    Under Review <img src="/assets/images/caution.svg" alt="Under Review" />  </> )}
+                        {sessionData?.firstJobVerified === 1 ? ("Verified") : (<>    Under Review <img src="/assets/images/caution.svg" alt="Under Review" />  </>)}
 
                       </span>
                     </div>
-                    <div className='lastbtn'><Link href="#">View</Link></div>
+                    <div className='lastbtn'><Link href="/recruiter/job/list/">View</Link></div>
                   </div>
 
                   <div className='card-content'>
