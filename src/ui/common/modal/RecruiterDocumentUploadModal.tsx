@@ -93,20 +93,20 @@ export default function RecruiterDocumentUploadModal({
     const fetchUploadedDoc = async () => {
         try {
             if (!userId) return;
-            
-            const response = await recruiterAllUploadedDocDocument(userId); 
+
+            const response = await recruiterAllUploadedDocDocument(userId);
             if (response?.success && response?.data?.items) {
-                setUploadedDocuments(response.data.items); 
+                setUploadedDocuments(response.data.items);
                 const alreadyUploadedDocs: Record<number, DocumentFile> = {};
-                
-                response.data.items.forEach((doc: UploadedDocument) => { 
-                    const matchedMasterDoc = masterDoc.find(master => 
+
+                response.data.items.forEach((doc: UploadedDocument) => {
+                    const matchedMasterDoc = masterDoc.find(master =>
                         master.name.toLowerCase() === (doc.documentname || '').toLowerCase()
                     );
-                    
+
                     if (matchedMasterDoc) {
                         alreadyUploadedDocs[matchedMasterDoc.id] = {
-                            file: new File([], ''),  
+                            file: new File([], ''),
                             uploaded: true,
                             uploading: false,
                             alreadyExists: true,
@@ -114,7 +114,7 @@ export default function RecruiterDocumentUploadModal({
                         };
                     }
                 });
-                
+
                 if (Object.keys(alreadyUploadedDocs).length > 0) {
                     setFormData(prev => ({
                         ...prev,
@@ -139,7 +139,7 @@ export default function RecruiterDocumentUploadModal({
                         doc.name.toLowerCase().includes(allowedDoc.name.toLowerCase().split(' ')[0])
                     )
                 );
-                setMasterDoc(filteredDocs); 
+                setMasterDoc(filteredDocs);
                 if (userId) {
                     await fetchUploadedDoc();
                 }
@@ -152,16 +152,16 @@ export default function RecruiterDocumentUploadModal({
         }
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, docId: number, docName: string) => { 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, docId: number, docName: string) => {
         const isAlreadyUploaded = uploadedDocuments.some(doc => {
             const masterDocItem = masterDoc.find(m => m.id === docId);
-            return masterDocItem && 
-                   (doc.documentname || '').toLowerCase() === masterDocItem.name.toLowerCase();
+            return masterDocItem &&
+                (doc.documentname || '').toLowerCase() === masterDocItem.name.toLowerCase();
         });
-        
+
         if (isAlreadyUploaded) {
             showAlert('info', 'This document is already uploaded. You cannot upload it again.');
-            e.target.value = ''; 
+            e.target.value = '';
             return;
         }
 
@@ -193,7 +193,7 @@ export default function RecruiterDocumentUploadModal({
                     }
                 }));
                 return;
-            } 
+            }
             setFormData(prev => ({
                 ...prev,
                 [docId]: {
@@ -208,12 +208,12 @@ export default function RecruiterDocumentUploadModal({
     };
 
     const uploadSingleDocument = async (docId: number) => {
-        if (!userId || !formData[docId]?.file) { 
+        if (!userId || !formData[docId]?.file) {
             showAlert('warning', 'Please select a file first.');
             return;
         }
 
-        try { 
+        try {
             setFormData(prev => ({
                 ...prev,
                 [docId]: {
@@ -229,9 +229,9 @@ export default function RecruiterDocumentUploadModal({
             formDataToSend.append('documentId', docId.toString());
             formDataToSend.append('file', formData[docId].file);
             formDataToSend.append('createdBy', userId.toString());
-            
+
             const response = await recruiterDocumentUpload(formDataToSend);
-            
+
             if (response?.code === 201 && response?.success) {
                 // Successfully created (201)
                 setFormData(prev => ({
@@ -247,10 +247,10 @@ export default function RecruiterDocumentUploadModal({
 
                 const docName = masterDoc.find(d => d.id === docId)?.name || 'Document';
                 showAlert('success', `${docName} uploaded successfully!`, response.message);
-                
+
                 // Refresh uploaded documents list
                 await fetchUploadedDoc();
-                
+
             } else if (response?.code === 409 && response?.success) {
                 // Document already exists (409)
                 setFormData(prev => ({
@@ -265,7 +265,7 @@ export default function RecruiterDocumentUploadModal({
 
                 const docName = masterDoc.find(d => d.id === docId)?.name || 'Document';
                 showAlert('info', `${docName} already uploaded`, response.message);
-                
+
                 // Refresh uploaded documents list
                 await fetchUploadedDoc();
 
@@ -303,8 +303,8 @@ export default function RecruiterDocumentUploadModal({
     const isDocumentAlreadyUploaded = (docId: number) => {
         const masterDocItem = masterDoc.find(d => d.id === docId);
         if (!masterDocItem) return false;
-        
-        return uploadedDocuments.some(doc => 
+
+        return uploadedDocuments.some(doc =>
             (doc.documentname || '').toLowerCase() === masterDocItem.name.toLowerCase()
         );
     };
@@ -319,7 +319,7 @@ export default function RecruiterDocumentUploadModal({
                 </Modal.Header>
                 <Modal.Body>
                     {error && <div className="alert alert-danger">{error}</div>}
-                    
+
                     <Form>
                         {masterDoc?.map((doc) => {
                             const docData = formData[doc.id];
@@ -348,10 +348,7 @@ export default function RecruiterDocumentUploadModal({
                                                 </span>
                                             ) : docData?.uploading ? (
                                                 <span className="text-primary me-2">
-                                                    <div className="spinner-border spinner-border-sm me-1" role="status">
-                                                        <span className="visually-hidden">Loading...</span>
-                                                    </div>
-                                                    Uploading...
+                                                    <Loader /> Uploading...
                                                 </span>
                                             ) : null}
                                         </div>
@@ -364,8 +361,8 @@ export default function RecruiterDocumentUploadModal({
                                                 handleFileChange(e, doc.id, doc.name)}
                                             accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                                             disabled={
-                                                isAlreadyUploaded || 
-                                                docData?.uploaded || 
+                                                isAlreadyUploaded ||
+                                                docData?.uploaded ||
                                                 docData?.uploading
                                             }
                                             title={isAlreadyUploaded ? "This document is already uploaded" : ""}
@@ -380,10 +377,7 @@ export default function RecruiterDocumentUploadModal({
                                             >
                                                 {docData?.uploading ? (
                                                     <>
-                                                        <div className="spinner-border spinner-border-sm me-1" role="status">
-                                                            <span className="visually-hidden">Loading...</span>
-                                                        </div>
-                                                        Uploading...
+                                                        <Loader /> Uploading...
                                                     </>
                                                 ) : (
                                                     <>
@@ -423,7 +417,21 @@ export default function RecruiterDocumentUploadModal({
                         })}
                     </Form>
                 </Modal.Body>
-                
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={onHide}>
+                        Close
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            onSuccess?.();
+                            onHide();
+                        }}
+                        disabled={loading}
+                    >
+                        {loading ? <Loader /> : 'Done'}
+                    </Button>
+                </Modal.Footer>
             </Modal>
         </>
     );
