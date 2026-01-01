@@ -3,41 +3,66 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaUser, FaSignOutAlt } from "react-icons/fa";
-import { logout } from "@/redux/slice/authSlice";
-import { setUserDetails, clearUserDetails } from "@/redux/slice/userDetailSlice";
 import { useDispatch } from "react-redux";
+
+import { logout } from "@/redux/slice/authSlice";
+import {
+  setUserDetails,
+  clearUserDetails,
+} from "@/redux/slice/userDetailSlice";
+
 import { userDetailService } from "@/services/AuthServices";
 import { useSession, useUser } from "@/hooks/useSession";
 
 export default function TopBar() {
   const [openDropdown, setOpenDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
   const router = useRouter();
-  const session = useSession();
-  const user = useUser();
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    if (!user && session?.user?.user_id) {
-      fetchUserDetail();
-    }
-  }, [user]);
+  const session = useSession();
+  const user = useUser();
 
-  const fetchUserDetail = async () => {
-    const result = await userDetailService(session?.user?.user_id);
-    dispatch(setUserDetails(result?.data));
-  };
-
+  /* ===============================
+     FETCH USER DETAIL (API CALL)
+  ================================ */
   useEffect(() => {
-    const handleClickOutside = (e: any) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+    if (!session?.user?.user_id) return;
+
+    const fetchUserDetail = async () => {
+      try {
+        const res = await userDetailService(session.user.user_id);
+        dispatch(setUserDetails(res?.data));
+      } catch (error) {
+        console.error("Failed to fetch user details", error);
+      }
+    };
+
+    fetchUserDetail();
+  }, [session?.user?.user_id, dispatch]);
+
+  /* ===============================
+     CLOSE DROPDOWN ON OUTSIDE CLICK
+  ================================ */
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setOpenDropdown(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  /* ===============================
+     LOGOUT HANDLER
+  ================================ */
   const handleLogout = () => {
     localStorage.removeItem("token");
     dispatch(logout());
@@ -56,20 +81,20 @@ export default function TopBar() {
           alt="profile"
           width={38}
           height={38}
-          onClick={() => setOpenDropdown(!openDropdown)}
+          onClick={() => setOpenDropdown((prev) => !prev)}
           style={{ borderRadius: "50%", cursor: "pointer" }}
         />
 
         {openDropdown && (
           <div
             className="bg-white shadow position-absolute end-0 mt-2 p-3 rounded"
-            style={{ width: "260px" }}
+            style={{ width: "260px", zIndex: 1000 }}
           >
             <h6 className="fw-bold mb-0">
               {user?.user_fullName || "Guest User"}
             </h6>
             <p className="text-muted small mb-3">
-              {user?.user_email}
+              {user?.user_email || ""}
             </p>
 
             <div className="d-flex align-items-center gap-2 mb-3 cursor-pointer">
