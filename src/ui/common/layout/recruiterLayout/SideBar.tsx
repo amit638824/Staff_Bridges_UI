@@ -9,8 +9,8 @@ import { TbLayoutSidebarRightExpand, TbLayoutSidebarRightCollapse } from "react-
 
 const menuItems = [
   { icon: <FaHome size={18} />, label: "Home", path: "/recruiter" },
-  { icon: <FaBriefcase size={18} />, label: "Jobs", path: "/recruiter/job" },
-  { icon: <FaBriefcase size={18} />, label: "Jobs list", path: "/recruiter/job/list" },
+  // { icon: <FaBriefcase size={18} />, label: "Jobs", path: "/recruiter/job" },
+  { icon: <FaBriefcase size={18} />, label: "Jobs", path: "/recruiter/job/list" },
   { icon: <FaDatabase size={18} />, label: "Database", path: "/recruiter/database" },
   { icon: <FaEllipsisH size={18} />, label: "More", path: "#" },
 ];

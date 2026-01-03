@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { FaTrashAlt } from "react-icons/fa";
-import { FaEdit } from "react-icons/fa";
-import InfiniteScroll from "react-infinite-scroll-component";
+import { FaTrashAlt, FaEdit } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 import Loader from "@/ui/common/loader/Loader";
 import {
@@ -12,7 +11,6 @@ import {
   deleteJobPstedServices,
 } from "@/services/RecruiterService";
 import { showAlert, showConfirmAlert } from "@/utils/swalFire";
-import { useRouter } from "next/navigation";
 
 interface JobItem {
   job_id: number;
@@ -31,52 +29,33 @@ const LIMIT = 10;
 const RecruiterJobList = () => {
   const [jobs, setJobs] = useState<JobItem[]>([]);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
-  const router = useRouter()
-  const fetchJobs = useCallback(
-    async (currentPage: number, isInitial = false) => {
-      try {
-        setLoading(true);
 
-        const res = await getRecruiterJobList(currentPage, LIMIT);
+  const router = useRouter();
 
-        if (res?.success) {
-          const newJobs: JobItem[] = res?.data?.items || [];
-          const totalPages = res?.data?.totalPages || 1;
+  /** FETCH JOB LIST */
+  const fetchJobs = async (pageNo: number) => {
+    try {
+      setLoading(true);
+      const res = await getRecruiterJobList(pageNo, LIMIT);
 
-          setJobs((prev) => {
-            if (isInitial) return newJobs;
-            const existingIds = new Set(prev.map((j) => j.job_id));
-            const uniqueNewJobs = newJobs.filter(
-              (j) => !existingIds.has(j.job_id)
-            );
-            return [...prev, ...uniqueNewJobs];
-          });
-          setHasMore(currentPage < totalPages);
-        }
-      } catch (error) {
-        console.error("Job fetch error", error);
-        setHasMore(false);
-      } finally {
-        setLoading(false);
+      if (res?.success) {
+        setJobs(res?.data?.items || []);
+        setTotalPages(res?.data?.totalPages || 1);
       }
-    },
-    []
-  );
-  useEffect(() => {
-    setPage(1);
-    fetchJobs(1, true);
-  }, [fetchJobs]);
-
-  const fetchMoreData = () => {
-    if (!hasMore) return;
-
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchJobs(nextPage);
+    } catch (error) {
+      console.error("Job fetch error", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    fetchJobs(page);
+  }, [page]);
+
+  /** DELETE JOB */
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirmAlert({
       title: "Delete Job?",
@@ -88,10 +67,9 @@ const RecruiterJobList = () => {
 
     try {
       const res = await deleteJobPstedServices(id);
-
-      if (res?.success && res?.code === 200) {
+      if (res?.success) {
         showAlert("success", res.message || "Deleted successfully");
-        setJobs((prev) => prev.filter((job) => job.job_id !== id));
+        fetchJobs(page);
       } else {
         showAlert("error", res?.message || "Delete failed");
       }
@@ -99,117 +77,136 @@ const RecruiterJobList = () => {
       showAlert("error", error?.message || "Server error");
     }
   };
-  const handleJobedit = (jobUpdate: any) => {
-    router.push(`/recruiter/job/update`);
-    localStorage.setItem("jobUpdate", JSON.stringify(jobUpdate))
-  }
+
+  /** EDIT JOB */
+  const handleJobEdit = (job: JobItem) => {
+    localStorage.setItem("jobUpdate", JSON.stringify(job));
+    router.push("/recruiter/job/update");
+  };
+
   return (
-    <div className="jobposting">
+    <div className="jobposting py-4">
       {loading && <Loader />}
+
       <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-
-            {/* HEADER */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h4 className="mb-0">Jobs</h4>
-              <Link href="/recruiter/job">
-                <button className="btn btn-primary">Post a Job</button>
-              </Link>
-            </div>
-
-            {/* SCROLL CONTAINER */}
-            <div
-              id="jobScroll"
-              style={{ height: "75vh", overflow: "auto" }}
-            >
-              <InfiniteScroll
-                dataLength={jobs.length}
-                next={fetchMoreData}
-                hasMore={hasMore}
-                loader={
-                  <div className="text-center my-3">
-                    <Loader />
-                  </div>
-                }
-                endMessage={
-                  jobs.length > 0 && (
-                    <p className="text-center text-muted my-4">
-                      No more jobs to load
-                    </p>
-                  )
-                }
-                scrollableTarget="jobScroll"
-              >
-                {/* JOB LIST */}
-                {jobs.map((job) => (
-                  <div
-                    key={`${job.job_id}-${job.created_at}`}
-                    className="formsection mb-4"
-                  >
-                    <div className="d-flex justify-content-between">
-                      <div>
-                        <h5>
-                          {job.job_title_name}
-                          <span className="badge bg-warning text-dark ms-2">
-                            {job.status}
-                          </span>
-                        </h5>
-
-                        <p className="text-muted small mb-2">
-                          {job.locality_name}, {job.city_name} | ₹
-                          {Number(job.salary_min).toLocaleString()} - ₹
-                          {Number(job.salary_max).toLocaleString()} |{" "}
-                          {job.openings} opening
-                        </p>
-                      </div>
-
-                      <div className="text-muted small">
-                        {new Date(job.created_at).toLocaleDateString()}
-                        <span
-                          className="ms-2 text-danger cursor-pointer"
-                          onClick={() => handleDelete(job.job_id)}
-                        >
-                          <FaTrashAlt />
-                        </span>
-                        <span
-                          className="ms-2 text-warning  cursor-pointer"
-                          onClick={() => handleJobedit(job)}
-                        >
-                          <FaEdit />
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="d-flex mt-3">
-                      <button className="btn btn-outline-primary me-2">
-                        0 To Review
-                      </button>
-                      <button className="btn btn-outline-primary me-2">
-                        0 Contacted
-                      </button>
-                      <button className="btn btn-primary ms-auto">
-                        View All Candidates
-                      </button>
-                    </div>
-
-                    <div className="mt-3 text-muted small">
-                      We will call you in the next 4 hours (10 a.m. – 6:30 p.m.)
-                    </div>
-                  </div>
-                ))}
-
-                {/* EMPTY STATE */}
-                {!loading && jobs.length === 0 && (
-                  <p className="text-center text-muted mt-5">
-                    No jobs posted yet
-                  </p>
-                )}
-              </InfiniteScroll>
-            </div>
-
-          </div>
+        {/* HEADER */}
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h4 className="mb-0">Jobs</h4>
+          <Link href="/recruiter/job">
+            <button className="btn btn-primary">Post a Job</button>
+          </Link>
         </div>
+
+        {/* JOB LIST */}
+        {jobs.length > 0 ? (
+          jobs.map((job) => (
+            <div key={job.job_id} className="card shadow-sm mb-3">
+              <div className="card-body">
+                <div className="d-flex justify-content-between">
+                  <div>
+                    <h5 className="mb-1">
+                      {job.job_title_name}
+                      <span className="badge bg-warning text-dark ms-2">
+                        {job.status}
+                      </span>
+                    </h5>
+
+                    <p className="text-muted small mb-2">
+                      {job.locality_name}, {job.city_name} | ₹
+                      {Number(job.salary_min).toLocaleString()} - ₹
+                      {Number(job.salary_max).toLocaleString()} |{" "}
+                      {job.openings} openings
+                    </p>
+                  </div>
+
+                  <div className="text-muted small text-end">
+                    {new Date(job.created_at).toLocaleDateString()}
+                    <div>
+                      <FaEdit
+                        className="text-warning me-3 cursor-pointer"
+                        onClick={() => handleJobEdit(job)}
+                      />
+                      <FaTrashAlt
+                        className="text-danger cursor-pointer"
+                        onClick={() => handleDelete(job.job_id)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="d-flex mt-3">
+                  <button className="btn btn-outline-primary me-2">
+                    0 To Review
+                  </button>
+                  <button className="btn btn-outline-primary me-2">
+                    0 Contacted
+                  </button>
+                  <button className="btn btn-primary ms-auto">
+                    View All Candidates
+                  </button>
+                </div>
+
+                <p className="text-muted small mt-3 mb-0">
+                  We will call you in the next 4 hours (10 a.m. – 6:30 p.m.)
+                </p>
+              </div>
+            </div>
+          ))
+        ) : (
+          !loading && (
+            <p className="text-center text-muted mt-5">
+              No jobs posted yet
+            </p>
+          )
+        )}
+
+        {/* PAGINATION */}
+        {totalPages > 1 && (
+          <nav className="mt-4">
+            <ul className="pagination justify-content-center">
+              <li className={`page-item ${page === 1 ? "disabled" : ""}`}>
+                <button
+                  className="page-link"
+                  onClick={() => setPage(page - 1)}
+                >
+                  Previous
+                </button>
+              </li>
+
+              {[...Array(totalPages)].map((_, index) => {
+                const pageNo = index + 1;
+                return (
+                  <li
+                    key={pageNo}
+                    className={`page-item ${
+                      page === pageNo ? "active" : ""
+                    }`}
+                  >
+                    <button
+                      className="page-link"
+                      onClick={() => setPage(pageNo)}
+                    >
+                      {pageNo}
+                    </button>
+                  </li>
+                );
+              })}
+
+              <li
+                className={`page-item ${
+                  page === totalPages ? "disabled" : ""
+                }`}
+              >
+                <button
+                  className="page-link"
+                  onClick={() => setPage(page + 1)}
+                >
+                  Next
+                </button>
+              </li>
+            </ul>
+          </nav>
+        )}
       </div>
     </div>
   );
